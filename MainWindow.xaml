@@ -1,0 +1,78 @@
+﻿<Window x:Class="WhoCan.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:classes="clr-namespace:TreeViewFileExplorer.ShellClasses"
+        xmlns:controls="clr-namespace:WhoCan"
+        mc:Ignorable="d"
+        Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="100" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" MinWidth="100" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" MinWidth="100" />
+        </Grid.ColumnDefinitions>
+        <TreeView x:Name="FoldersControl" Grid.Column="0" SelectedValuePath="{Binding FileSystemInfo}" SelectedItemChanged="FoldersControl_SelectedItemChanged">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="KeyboardNavigation.AcceptsReturn" Value="True" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type classes:FileSystemObjectInfo}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding ImageSource, UpdateSourceTrigger=PropertyChanged}" Margin="0,1,8,1"/>
+                        <TextBlock Text="{Binding FileSystemInfo.Name}"/>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+        <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <controls:SortableListView x:Name="RulesControl" Grid.Column="2" ItemsSource="{Binding RuleInfos}" SelectionChanged="RulesControl_SelectionChanged">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Domain}" Value="false">
+                            <Setter Property="Foreground" Value="Gray" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Deny}" Value="true">
+                            <Setter Property="Background" Value="LightGray" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                    <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <controls:SortableListView.View>
+                <GridView>
+                    <GridViewColumn Header="Аккаунт" DisplayMemberBinding="{Binding PrincipalName}" Width="Auto" controls:SortableListView.SortPropertyName="PrincipalName"/>
+                    <GridViewColumn Header="Права" DisplayMemberBinding="{Binding Flags}" Width="Auto" controls:SortableListView.SortPropertyName="Flags"/>
+                    <GridViewColumn Header="Подробнее" DisplayMemberBinding="{Binding Comment}" Width="Auto" controls:SortableListView.SortPropertyName="Comment"/>
+                </GridView>
+            </controls:SortableListView.View>
+        </controls:SortableListView>
+        <GridSplitter Grid.Column="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <controls:SortableListView x:Name="UsersControl" Grid.Column="4" ItemsSource="{Binding UserInfos}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Enabled}" Value="false">
+                            <Setter Property="Foreground" Value="Gray" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Логин" DisplayMemberBinding="{Binding UserName}" Width="Auto" controls:SortableListView.SortPropertyName="UserName"/>
+                    <GridViewColumn Header="Имя" DisplayMemberBinding="{Binding Name}" Width="Auto" controls:SortableListView.SortPropertyName="Name"/>
+                    <GridViewColumn Header="Фамилия" DisplayMemberBinding="{Binding Family}" Width="Auto" controls:SortableListView.SortPropertyName="Family"/>
+                    <GridViewColumn Header="Подробнее" DisplayMemberBinding="{Binding Comment}" Width="Auto" controls:SortableListView.SortPropertyName="Comment"/>
+                </GridView>
+            </ListView.View>
+        </controls:SortableListView>
+    </Grid>
+</Window>
