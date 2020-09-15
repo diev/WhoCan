@@ -17,7 +17,7 @@ Licensed under the [Apache License, Version 2.0].
 [appveyor]: https://ci.appveyor.com/project/diev/whocan
 [releases]: https://github.com/diev/WhoCan/releases/latest
 
-[Build status]: https://ci.appveyor.com/api/projects/status/tjajducaps0g7wsd?svg=true
+[Build status]: https://ci.appveyor.com/api/projects/status/xx2lrjca20u5oq19?svg=true
 [GitHub Release]: https://img.shields.io/github/release/diev/WhoCan.svg
 
 [Рабочее окно приложения]: assets/images/whocan.png
