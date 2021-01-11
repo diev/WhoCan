@@ -65,6 +65,7 @@
     </ApplicationDefinition>
     <Compile Include="MainViewModel.cs" />
     <Compile Include="LocalGroups.cs" />
+    <Compile Include="Models\GroupInfo.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Models\RuleInfo.cs" />
     <Compile Include="SortableListView.cs" />

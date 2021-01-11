@@ -117,6 +117,10 @@ namespace WhoCan
             }
             UsersControl.UpdateLayout();
 
+            GroupsControl.ItemsSource = null;
+            GroupsControl.Items.Clear();
+            GroupsControl.UpdateLayout();
+
             Cursor = Cursors.Arrow;
         }
 
@@ -128,6 +132,24 @@ namespace WhoCan
 
             UsersControl.ItemsSource = ((MainViewModel)DataContext).GetUserInfos();
             UsersControl.UpdateLayout();
+            Cursor = Cursors.Arrow;
+        }
+
+        private void UsersControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Cursor = Cursors.Wait;
+            GroupsControl.ItemsSource = null;
+            GroupsControl.Items.Clear();
+            try
+            {
+                Models.UserInfo item = (Models.UserInfo)UsersControl.SelectedItem;
+                if (item != null)
+                {
+                    GroupsControl.ItemsSource = ((MainViewModel)DataContext).GetGroupInfos(item.UserName);
+                }
+            }
+            catch { }
+            GroupsControl.UpdateLayout();
             Cursor = Cursors.Arrow;
         }
     }

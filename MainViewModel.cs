@@ -31,11 +31,13 @@ namespace WhoCan
     {
         public ObservableCollection<RuleInfo> RuleInfos { get; set; }
         public ObservableCollection<UserInfo> UserInfos { get; set; }
+        public ObservableCollection<GroupInfo> GroupInfos { get; set; }
 
         public MainViewModel()
         {
             RuleInfos = new ObservableCollection<RuleInfo>();
             UserInfos = new ObservableCollection<UserInfo>();
+            GroupInfos = new ObservableCollection<GroupInfo>();
         }
 
         public FileSystemObjectInfo SelectedFileSystemObjectInfo
@@ -48,6 +50,12 @@ namespace WhoCan
         {
             get => GetValue<UserInfo>(nameof(SelectedUserInfo));
             set => SetValue(nameof(SelectedUserInfo), value);
+        }
+
+        public GroupInfo SelectedGroupInfo
+        {
+            get => GetValue<GroupInfo>(nameof(SelectedGroupInfo));
+            set => SetValue(nameof(SelectedGroupInfo), value);
         }
 
         public ObservableCollection<RuleInfo> GetRuleInfos()
@@ -225,6 +233,45 @@ namespace WhoCan
             {
                 UserInfos.Add(userInfo);
             }
+        }
+
+        public ObservableCollection<GroupInfo> GetGroupInfos(string userName)
+        {
+            GroupInfos.Clear();
+
+            // establish domain context
+            try
+            {
+                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
+
+                // find the user
+                UserPrincipal user = UserPrincipal.FindByIdentity(principalContext, userName);
+
+                // if found - grab its groups
+                if (user != null)
+                {
+                    PrincipalSearchResult<Principal> groups = user.GetAuthorizationGroups();
+
+                    // iterate over all groups
+                    foreach (Principal p in groups)
+                    {
+                        // make sure to add only group principals
+                        if (p is GroupPrincipal)
+                        {
+                            var groupInfo = new GroupInfo(
+                                p.Name,
+                                p.Description
+                            );
+                            GroupInfos.Add(groupInfo);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return GroupInfos;
         }
     }
 }
