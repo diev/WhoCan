@@ -52,9 +52,9 @@ namespace WhoCan
 
         public ObservableCollection<RuleInfo> GetRuleInfos()
         {
-           RuleInfos.Clear();
-           try
-           {
+            RuleInfos.Clear();
+            try
+            {
                 var info = SelectedFileSystemObjectInfo.FileSystemInfo;
                 string path = info.FullName;
                 AuthorizationRuleCollection rules;
@@ -103,7 +103,8 @@ namespace WhoCan
                         rule.IdentityReference.Value.StartsWith(@"BANK\"),
                         deny,
                         flags.ToString(),
-                        comment));
+                        comment)
+                    );
                 }
             }
             catch { }
@@ -160,7 +161,8 @@ namespace WhoCan
                 u.DisplayName,
                 u.GivenName,
                 u.Surname,
-                u.DistinguishedName.Replace(",DC=bank,DC=cibank,DC=ru", ""));
+                u.DistinguishedName.Replace(",DC=bank,DC=cibank,DC=ru", "")
+            );
 
             if (!UserInfos.Contains(userInfo))
             {
@@ -189,7 +191,8 @@ namespace WhoCan
                 principal,
                 user,
                 group,
-                Environment.MachineName + ", " + principal);
+                Environment.MachineName + ", " + principal
+            );
 
             if (!UserInfos.Contains(userInfo))
             {

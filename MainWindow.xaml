@@ -8,6 +8,10 @@
         mc:Ignorable="d"
         Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
     <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" MinHeight="100" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="100" />
             <ColumnDefinition Width="Auto" />
@@ -15,7 +19,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <TreeView x:Name="FoldersControl" Grid.Column="0" SelectedValuePath="{Binding FileSystemInfo}" SelectedItemChanged="FoldersControl_SelectedItemChanged">
+        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" SelectedValuePath="{Binding FileSystemInfo}" SelectedItemChanged="FoldersControl_SelectedItemChanged">
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -31,8 +35,8 @@
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView>
-        <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <controls:SortableListView x:Name="RulesControl" Grid.Column="2" ItemsSource="{Binding RuleInfos}" SelectionChanged="RulesControl_SelectionChanged">
+        <GridSplitter Grid.Row="0" Grid.Column="1" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" ItemsSource="{Binding RuleInfos}" SelectionChanged="RulesControl_SelectionChanged">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
@@ -54,8 +58,8 @@
                 </GridView>
             </controls:SortableListView.View>
         </controls:SortableListView>
-        <GridSplitter Grid.Column="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <controls:SortableListView x:Name="UsersControl" Grid.Column="4" ItemsSource="{Binding UserInfos}">
+        <GridSplitter Grid.Row="0" Grid.Column="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <controls:SortableListView x:Name="UsersControl" Grid.Row="0" Grid.Column="4" ItemsSource="{Binding UserInfos}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
@@ -74,5 +78,8 @@
                 </GridView>
             </ListView.View>
         </controls:SortableListView>
+        <StatusBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Margin="0,0,0,0">
+            <TextBlock x:Name="Status">Готово</TextBlock>
+        </StatusBar>
     </Grid>
 </Window>

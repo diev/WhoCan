@@ -16,9 +16,10 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -78,15 +79,39 @@ namespace WhoCan
             var info = item.FileSystemInfo;
             string path = info.FullName;
             
-            Title = "WhoCan " + path;
+            Title = $"WhoCan | {path}";
+
+            string owner;
+            try
+            {
+                if (info is DirectoryInfo)
+                {
+                    DirectorySecurity security = Directory.GetAccessControl(path);
+                    owner = security.GetOwner(typeof(NTAccount)).ToString();
+                }
+                else // if (info is FileInfo)
+                {
+                    FileSecurity security = File.GetAccessControl(path);
+                    owner = security.GetOwner(typeof(NTAccount)).ToString();
+                }
+            }
+            catch
+            {
+                owner = "?";
+            }
+            Status.Text = $"Владелец: {owner}";
 
             RulesControl.ItemsSource = null;
             RulesControl.Items.Clear();
 
             ((MainViewModel)DataContext).SelectedFileSystemObjectInfo = item;
             RulesControl.ItemsSource = ((MainViewModel)DataContext).GetRuleInfos();
-
             RulesControl.UpdateLayout();
+
+            UsersControl.ItemsSource = null;
+            UsersControl.Items.Clear();
+            UsersControl.UpdateLayout();
+
             Cursor = Cursors.Arrow;
         }
 
@@ -97,7 +122,6 @@ namespace WhoCan
             UsersControl.Items.Clear();
 
             UsersControl.ItemsSource = ((MainViewModel)DataContext).GetUserInfos();
-
             UsersControl.UpdateLayout();
             Cursor = Cursors.Arrow;
         }
