@@ -121,22 +121,7 @@ namespace WhoCan
                 {
                     if (ruleInfo.IsSelected)
                     {
-                        var principal = Principal.FindByIdentity(principalContext, ruleInfo.PrincipalName);
-                        if (principal is GroupPrincipal group)
-                        {
-                            var members = group.GetMembers(true);
-                            foreach (Principal member in members)
-                            {
-                                if (member is UserPrincipal user1)
-                                {
-                                    AddDomainUser(user1);
-                                }
-                            }
-                        }
-                        if (principal is UserPrincipal user)
-                        {
-                            AddDomainUser(user);
-                        }
+                        AddUser(principalContext, ruleInfo);
                     }
                 }
             }
@@ -151,6 +136,48 @@ namespace WhoCan
                 }
             }
             return UserInfos;
+        }
+
+        public ObservableCollection<UserInfo> GetAllUserInfos()
+        {
+            UserInfos.Clear();
+            try
+            {
+                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
+                foreach (var ruleInfo in RuleInfos)
+                {
+                    AddUser(principalContext, ruleInfo);
+                }
+            }
+            catch
+            {
+                foreach (var ruleInfo in RuleInfos)
+                {
+                    AddLocalUser(ruleInfo.PrincipalName);
+                }
+            }
+            return UserInfos;
+        }
+
+
+        private void AddUser(PrincipalContext principalContext, RuleInfo ruleInfo)
+        {
+            var principal = Principal.FindByIdentity(principalContext, ruleInfo.PrincipalName);
+            if (principal is GroupPrincipal group)
+            {
+                var members = group.GetMembers(true);
+                foreach (Principal member in members)
+                {
+                    if (member is UserPrincipal user1)
+                    {
+                        AddDomainUser(user1);
+                    }
+                }
+            }
+            if (principal is UserPrincipal user)
+            {
+                AddDomainUser(user);
+            }
         }
 
         private void AddDomainUser(UserPrincipal u)

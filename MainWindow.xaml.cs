@@ -110,6 +110,11 @@ namespace WhoCan
 
             UsersControl.ItemsSource = null;
             UsersControl.Items.Clear();
+
+            //if (!lightest) //TODO: Add this Option
+            {
+                UsersControl.ItemsSource = ((MainViewModel)DataContext).GetAllUserInfos();
+            }
             UsersControl.UpdateLayout();
 
             Cursor = Cursors.Arrow;
