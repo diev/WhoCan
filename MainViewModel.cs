@@ -33,8 +33,8 @@ namespace WhoCan
     {
         private readonly string[] SkipAdmins = { 
             @"BANK\admin", 
-            @"BUILTIN\Администраторы", 
-            @"NT AUTHORITY\СИСТЕМА" 
+            @"BUILTIN\Администраторы", @"BUILTIN\Administrators",
+            @"NT AUTHORITY\СИСТЕМА", @"NT AUTHORITY\SYSTEM"
         };
 
         private readonly string[] SkipGroups = {
