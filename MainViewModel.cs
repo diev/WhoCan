@@ -50,7 +50,8 @@ namespace WhoCan
         };
 
         private const string CommonNT = @"BANK\";
-        private const string CommonAD = ",DC=bank,DC=cibank,DC=ru";
+        private const string CommonOU = ",OU=БАНК";
+        private const string CommonDC = ",DC=bank,DC=cibank,DC=ru";
 
         private const string RightDeny = "x";
         private const string RightFull = "F";
@@ -276,7 +277,11 @@ namespace WhoCan
                 user.DisplayName,
                 user.GivenName,
                 user.Surname,
-                user.DistinguishedName.Replace(CommonAD, string.Empty),
+                user.DistinguishedName // "CN=Name Surname,OU=Dept,OU=XXXX,DC=XXX,DC=XXXX,DC=XX" -> "Name Surname, Dept"
+                    .Replace("CN=", string.Empty)
+                    .Replace(CommonOU, string.Empty)
+                    .Replace(CommonDC, string.Empty)
+                    .Replace("OU=", " "),
                 (bool)user.Enabled && ruleInfo.IsDanger
             );
 

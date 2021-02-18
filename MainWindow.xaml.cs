@@ -16,6 +16,7 @@
 #endregion
 
 using System;
+using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
@@ -94,14 +95,25 @@ namespace WhoCan
                 {
                     DirectorySecurity security = Directory.GetAccessControl(path);
                     owner = security.GetOwner(typeof(NTAccount)).ToString();
-                    modified = info.LastWriteTime;
                 }
                 else // if (info is FileInfo)
                 {
                     FileSecurity security = File.GetAccessControl(path);
                     owner = security.GetOwner(typeof(NTAccount)).ToString();
-                    modified = info.LastWriteTime;
                 }
+
+                try
+                {
+                    PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
+                    var principal = Principal.FindByIdentity(principalContext, owner);
+                    string name = principal.DisplayName;
+
+                    if (name.Length > 0)
+                    {
+                        owner += $" ({name})";
+                    }
+                }
+                catch { }
             }
             catch
             {
@@ -109,7 +121,7 @@ namespace WhoCan
             }
 
             Title = $"WhoCan | {path}";
-            Status.Text = $"Владелец: {owner}, запись: {modified}";
+            Status.Text = $"Владелец: {owner}, запись: {info.LastWriteTime}";
 
             RulesControl.ItemsSource = null;
             RulesControl.Items.Clear();
