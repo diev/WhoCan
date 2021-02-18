@@ -22,7 +22,7 @@ namespace WhoCan.Models
 {
     public class UserInfo : BaseObject, IEquatable<UserInfo>
     {
-        public UserInfo(string userName, bool enabled, string displayName, string name, string family, string comment)
+        public UserInfo(string userName, bool enabled, string displayName, string name, string family, string comment, bool danger)
         {
             UserName = userName;
             Enabled = enabled;
@@ -30,6 +30,7 @@ namespace WhoCan.Models
             Name = name;
             Family = family;
             Comment = comment;
+            IsDanger = danger;
         }
 
         public string UserName
@@ -66,6 +67,12 @@ namespace WhoCan.Models
         {
             get => GetValue<string>(nameof(Comment));
             private set => SetValue(nameof(Comment), value);
+        }
+
+        public bool IsDanger
+        {
+            get => GetValue<bool>(nameof(IsDanger));
+            set => SetValue(nameof(IsDanger), value);
         }
 
         public override bool Equals(object obj)

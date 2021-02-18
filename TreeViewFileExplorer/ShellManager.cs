@@ -19,6 +19,7 @@
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+
 using TreeViewFileExplorer.Enums;
 using TreeViewFileExplorer.Structs;
 
@@ -35,6 +36,7 @@ namespace TreeViewFileExplorer
             {
                 flags |= (uint)ShellAttribute.OpenIcon;
             }
+
             if (iconSize == IconSize.Small)
             {
                 flags |= (uint)ShellAttribute.SmallIcon;

@@ -22,13 +22,41 @@ using System.IO;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
+
 using TreeViewFileExplorer.ShellClasses;
+
 using WhoCan.Models;
 
 namespace WhoCan
 {
     public class MainViewModel : BaseObject
     {
+        private readonly string[] SkipAdmins = { 
+            @"BANK\admin", 
+            @"BUILTIN\Администраторы", 
+            @"NT AUTHORITY\СИСТЕМА" 
+        };
+
+        private readonly string[] SkipGroups = {
+            "Все",
+            "Высокий обязательный уровень",
+            "Данная организация",
+            "Подтвержденное службой удостоверение",
+            "Пользователи",
+            "Пользователи домена",
+            "Пользователи удаленного рабочего стола",
+            "Прошедшие проверку",
+            "Средний обязательный уровень" 
+        };
+
+        private const string CommonNT = @"BANK\";
+        private const string CommonAD = ",DC=bank,DC=cibank,DC=ru";
+
+        private const string RightDeny = "x";
+        private const string RightFull = "F";
+        private const string RightRead = "R";
+        private const string RightWrite = "W";
+
         public ObservableCollection<RuleInfo> RuleInfos { get; set; }
         public ObservableCollection<UserInfo> UserInfos { get; set; }
         public ObservableCollection<GroupInfo> GroupInfos { get; set; }
@@ -61,11 +89,16 @@ namespace WhoCan
         public ObservableCollection<RuleInfo> GetRuleInfos()
         {
             RuleInfos.Clear();
+
+            PrincipalContext principalContext = null;
+            try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
+
             try
             {
                 var info = SelectedFileSystemObjectInfo.FileSystemInfo;
                 string path = info.FullName;
                 AuthorizationRuleCollection rules;
+
                 if (info is DirectoryInfo)
                 {
                     DirectorySecurity security = Directory.GetAccessControl(path);
@@ -79,91 +112,135 @@ namespace WhoCan
 
                 foreach (FileSystemAccessRule rule in rules)
                 {
+                    var name = rule.IdentityReference.Value;
+                    bool group = true;
+
+                    if (principalContext != null)
+                    {
+                        bool skip = false;
+
+                        foreach (string admin in SkipAdmins)
+                        {
+                            if (name.Equals(admin))
+                            {
+                                skip = true;
+                                break;
+                            }
+                        }
+
+                        if (skip)
+                        {
+                            continue;
+                        }
+
+                        var principal = Principal.FindByIdentity(principalContext, name);
+                        group = principal is GroupPrincipal;
+                    }
+
                     bool deny = rule.AccessControlType.HasFlag(AccessControlType.Deny);
                     var flags = new StringBuilder();
                     string comment;
+                    bool danger = false;
+
                     if (deny)
                     {
-                        flags.Append("x");
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Write))
-                            flags.Append("W");
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
-                            flags.Append("D");
+                        flags.Append(RightDeny);
+
+                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Write) || rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
+                        {
+                            flags.Append(RightWrite);
+                        }
 
                         comment = "Deny " + rule.FileSystemRights.ToString();
                     }
                     else
                     {
                         if (rule.FileSystemRights.HasFlag(FileSystemRights.FullControl))
-                            flags.Append("F");
+                        {
+                            danger = true;
+                            flags.Append(RightFull);
+                        }
+
                         if (rule.FileSystemRights.HasFlag(FileSystemRights.ReadAndExecute))
-                            flags.Append("R");
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify))
-                            flags.Append("W");
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
-                            flags.Append("D");
+                        {
+                            flags.Append(RightRead);
+                        }
+
+                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify) || rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
+                        {
+                            danger = true;
+                            flags.Append(RightWrite);
+                        }
 
                         comment = rule.FileSystemRights.ToString();
                     }
 
+                    if (principalContext != null)
+                    {
+                        var principal = Principal.FindByIdentity(principalContext, name);
+                        group = principal is GroupPrincipal;
+                    }
+
                     RuleInfos.Add(new RuleInfo(
-                        rule.IdentityReference.Value,
-                        rule.IdentityReference.Value.StartsWith(@"BANK\"),
+                        name.Replace(CommonNT, string.Empty),
+                        name.StartsWith(CommonNT),
                         deny,
                         flags.ToString(),
-                        comment)
+                        comment,
+                        group,
+                        danger)
                     );
                 }
             }
             catch { }
+
             return RuleInfos;
         }
 
         public ObservableCollection<UserInfo> GetUserInfos()
         {
             UserInfos.Clear();
-            try
+
+            PrincipalContext principalContext = null;
+            try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
+
+            foreach (var ruleInfo in RuleInfos)
             {
-                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
-                foreach (var ruleInfo in RuleInfos)
+                if (ruleInfo.IsSelected)
                 {
-                    if (ruleInfo.IsSelected)
+                    if (principalContext != null)
                     {
                         AddUser(principalContext, ruleInfo);
                     }
-                }
-            }
-            catch
-            {
-                foreach (var ruleInfo in RuleInfos)
-                {
-                    if (ruleInfo.IsSelected)
+                    else
                     {
                         AddLocalUser(ruleInfo.PrincipalName);
                     }
                 }
             }
+
             return UserInfos;
         }
 
         public ObservableCollection<UserInfo> GetAllUserInfos()
         {
             UserInfos.Clear();
-            try
+
+            PrincipalContext principalContext = null;
+            try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
+
+            foreach (var ruleInfo in RuleInfos)
             {
-                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
-                foreach (var ruleInfo in RuleInfos)
+                if (principalContext != null)
                 {
                     AddUser(principalContext, ruleInfo);
                 }
-            }
-            catch
-            {
-                foreach (var ruleInfo in RuleInfos)
+                else
                 {
                     AddLocalUser(ruleInfo.PrincipalName);
                 }
             }
+
             return UserInfos;
         }
 
@@ -171,43 +248,65 @@ namespace WhoCan
         private void AddUser(PrincipalContext principalContext, RuleInfo ruleInfo)
         {
             var principal = Principal.FindByIdentity(principalContext, ruleInfo.PrincipalName);
+
             if (principal is GroupPrincipal group)
             {
                 var members = group.GetMembers(true);
+
                 foreach (Principal member in members)
                 {
                     if (member is UserPrincipal user1)
                     {
-                        AddDomainUser(user1);
+                        AddDomainUser(user1, ruleInfo);
                     }
                 }
             }
+
             if (principal is UserPrincipal user)
             {
-                AddDomainUser(user);
+                AddDomainUser(user, ruleInfo);
             }
         }
 
-        private void AddDomainUser(UserPrincipal u)
+        private void AddDomainUser(UserPrincipal user, RuleInfo ruleInfo)
         {
             var userInfo = new UserInfo(
-                u.SamAccountName, //.UserPrincipalName,
-                (bool)u.Enabled,
-                u.DisplayName,
-                u.GivenName,
-                u.Surname,
-                u.DistinguishedName.Replace(",DC=bank,DC=cibank,DC=ru", "")
+                user.SamAccountName, //.UserPrincipalName,
+                (bool)user.Enabled,
+                user.DisplayName,
+                user.GivenName,
+                user.Surname,
+                user.DistinguishedName.Replace(CommonAD, string.Empty),
+                (bool)user.Enabled && ruleInfo.IsDanger
             );
 
-            if (!UserInfos.Contains(userInfo))
+            if (UserInfos.Contains(userInfo))
             {
-                UserInfos.Add(userInfo);
+                foreach (var userInfoIn in UserInfos)
+                {
+                    if (userInfoIn == userInfo)
+                    {
+                        if (userInfoIn.Enabled && !userInfoIn.IsDanger && userInfo.IsDanger)
+                        {
+                            userInfoIn.IsDanger = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            else // add
+            {
+                if (!ruleInfo.Deny)
+                {
+                    UserInfos.Add(userInfo);
+                }
             }
         }
 
         private void AddLocalUser(string principal)
         {
             string group, user;
+
             if (principal.Contains("\\"))
             {
                 string[] account = principal.Split('\\');
@@ -216,7 +315,7 @@ namespace WhoCan
             }
             else
             {
-                group = "";
+                group = string.Empty;
                 user = principal;
             }
 
@@ -226,7 +325,8 @@ namespace WhoCan
                 principal,
                 user,
                 group,
-                Environment.MachineName + ", " + principal
+                Environment.MachineName + ", " + principal,
+                false
             );
 
             if (!UserInfos.Contains(userInfo))
@@ -240,12 +340,13 @@ namespace WhoCan
             GroupInfos.Clear();
 
             // establish domain context
-            try
-            {
-                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
+            PrincipalContext principalContext = null;
+            try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
 
+            if (principalContext != null)
+            {
                 // find the user
-                UserPrincipal user = UserPrincipal.FindByIdentity(principalContext, userName);
+                var user = UserPrincipal.FindByIdentity(principalContext, userName);
 
                 // if found - grab its groups
                 if (user != null)
@@ -258,17 +359,32 @@ namespace WhoCan
                         // make sure to add only group principals
                         if (p is GroupPrincipal)
                         {
+                            string name = p.Name;
+                            bool skip = false;
+
+                            foreach (string group in SkipGroups)
+                            {
+                                if (name.Equals(group))
+                                {
+                                    skip = true;
+                                    break;
+                                }
+                            }
+
+                            if (skip)
+                            {
+                                continue;
+                            }
+
                             var groupInfo = new GroupInfo(
-                                p.Name,
+                                name,
                                 p.Description
                             );
+
                             GroupInfos.Add(groupInfo);
                         }
                     }
                 }
-            }
-            catch
-            {
             }
 
             return GroupInfos;

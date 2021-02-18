@@ -19,6 +19,7 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Controls;
+
 using TreeViewFileExplorer.ShellClasses;
 
 namespace TreeViewFileExplorer
@@ -33,6 +34,7 @@ namespace TreeViewFileExplorer
             {
                 return;
             }
+
             var driveFileSystemObjectInfo = GetDriveFileSystemObjectInfo(tree, path);
             driveFileSystemObjectInfo.IsExpanded = true;
             PreSelect(driveFileSystemObjectInfo, path);
@@ -43,6 +45,7 @@ namespace TreeViewFileExplorer
             foreach (var childFileSystemObjectInfo in fileSystemObjectInfo.Children)
             {
                 var isParentPath = IsParentPath(path, childFileSystemObjectInfo.FileSystemInfo.FullName);
+
                 if (isParentPath)
                 {
                     if (string.Equals(childFileSystemObjectInfo.FileSystemInfo.FullName, path))
@@ -68,6 +71,7 @@ namespace TreeViewFileExplorer
                 .GetDrives()
                 .Where(d => d.RootDirectory.FullName == directory.Root.FullName)
                 .FirstOrDefault();
+
             return GetDriveFileSystemObjectInfo(tree, drive);
         }
 
@@ -80,6 +84,7 @@ namespace TreeViewFileExplorer
                     return fso;
                 }
             }
+
             return null;
         }
 

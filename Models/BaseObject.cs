@@ -37,6 +37,7 @@ namespace WhoCan.Models
             {
                 return null;
             }
+
             return _values.ContainsKey(key) ? _values[key] : null;
         }
 
@@ -50,6 +51,7 @@ namespace WhoCan.Models
             {
                 _values[key] = value;
             }
+
             OnPropertyChanged(key);
         }
     }

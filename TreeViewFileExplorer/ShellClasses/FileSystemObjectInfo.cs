@@ -22,7 +22,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Media;
+
 using TreeViewFileExplorer.Enums;
+
 using WhoCan.Models;
 
 namespace TreeViewFileExplorer.ShellClasses
@@ -95,9 +97,11 @@ namespace TreeViewFileExplorer.ShellClasses
                 if (string.Equals(e.PropertyName, "IsExpanded", StringComparison.CurrentCultureIgnoreCase))
                 {
                     RaiseBeforeExpand();
+
                     if (IsExpanded)
                     {
                         ImageSource = FolderManager.GetImageSource(FileSystemInfo.FullName, ItemState.Open);
+
                         if (HasDummy())
                         {
                             RaiseBeforeExplore();
@@ -111,6 +115,7 @@ namespace TreeViewFileExplorer.ShellClasses
                     {
                         ImageSource = FolderManager.GetImageSource(FileSystemInfo.FullName, ItemState.Close);
                     }
+
                     RaiseAfterExpand();
                 }
             }
@@ -181,6 +186,7 @@ namespace TreeViewFileExplorer.ShellClasses
                 if (FileSystemInfo is DirectoryInfo info)
                 {
                     var directories = info.EnumerateDirectories().OrderBy(d => d.Name);
+
                     foreach (var directory in directories)
                     {
                         if (!directory.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
@@ -212,6 +218,7 @@ namespace TreeViewFileExplorer.ShellClasses
                 if (FileSystemInfo is DirectoryInfo info)
                 {
                     var files = info.EnumerateFiles().OrderBy(d => d.Name);
+
                     foreach (var file in files)
                     {
                         if (!file.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))

@@ -73,11 +73,13 @@ namespace WhoCan
 
                 // see if we have an attached SortPropertyName value
                 string sortBy = GetSortPropertyName(headerClicked.Column);
+
                 if (string.IsNullOrEmpty(sortBy))
                 {
                     // otherwise use the column header name
                     sortBy = headerClicked.Column.Header as string;
                 }
+
                 Sort(sortBy, direction);
 
                 _lastHeaderClicked = headerClicked;

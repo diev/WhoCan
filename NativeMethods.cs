@@ -46,7 +46,7 @@ namespace WhoCan
             ref UInt32 totalentries, 
             IntPtr resumehandle);
 
-        [DllImport("Netapi32.dll")]
+        [DllImport("netapi32.dll")]
         public extern static UInt32 NetLocalGroupGetMembers(
             [MarshalAs(UnmanagedType.LPWStr)] String servername, 
             [MarshalAs(UnmanagedType.LPWStr)] String localgroupname, 

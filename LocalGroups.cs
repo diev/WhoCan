@@ -29,23 +29,28 @@ namespace WhoCan
         public static IEnumerable<string> GetUserNames()
         {
             var buffer = IntPtr.Zero;
+
             try
             {
                 UInt32 entriesRead = 0;
                 UInt32 totalEntries = 0;
+
                 var result = NativeMethods.NetUserEnum(null, 0, 0, ref buffer, UInt32.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
                 if (result != 0)
+                {
                     throw new Win32Exception((Int32)result);
+                }
+
                 var userNames = Enumerable
-                  .Range(0, (Int32)entriesRead)
-                  .Select(
-                    i => {
+                    .Range(0, (Int32)entriesRead)
+                    .Select(i => {
                         var userInfo = Marshal.ReadIntPtr(buffer, i * IntPtr.Size);
                         var userName = Marshal.PtrToStringAuto(userInfo);
+
                         return userName;
-                    }
-                  )
-                  .ToList();
+                    })
+                    .ToList();
+
                 return userNames;
             }
             finally
@@ -57,23 +62,28 @@ namespace WhoCan
         public static IEnumerable<string> GetLocalGroupNames()
         {
             var buffer = IntPtr.Zero;
+
             try
             {
                 UInt32 entriesRead = 0;
                 UInt32 totalEntries = 0;
+
                 var result = NativeMethods.NetLocalGroupEnum(null, 0, ref buffer, UInt32.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
                 if (result != 0)
+                {
                     throw new Win32Exception((Int32)result);
+                }
+
                 var localGroupNames = Enumerable
-                  .Range(0, (Int32)entriesRead)
-                  .Select(
-                    i => {
+                    .Range(0, (Int32)entriesRead)
+                    .Select(i => {
                         var localGroupInfo = Marshal.ReadIntPtr(buffer, i * IntPtr.Size);
                         var groupName = Marshal.PtrToStringAuto(localGroupInfo);
+                        
                         return groupName;
-                    }
-                  )
-                  .ToList();
+                    })
+                    .ToList();
+
                 return localGroupNames;
             }
             finally
@@ -85,23 +95,28 @@ namespace WhoCan
         public static IEnumerable<string> GetLocalGroupUsers(string localGroupName)
         {
             var buffer = IntPtr.Zero;
+
             try
             {
                 UInt32 entriesRead = 0;
                 UInt32 totalEntries = 0;
+
                 var result = NativeMethods.NetLocalGroupGetMembers(null, localGroupName, 3, ref buffer, UInt32.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
                 if (result != 0)
+                {
                     throw new Win32Exception((Int32)result);
+                }
+
                 var userNames = Enumerable
-                  .Range(0, (Int32)entriesRead)
-                  .Select(
-                    i => {
+                    .Range(0, (Int32)entriesRead)
+                    .Select(i => {
                         var membersInfo = Marshal.ReadIntPtr(buffer, i * IntPtr.Size);
                         var userName = Marshal.PtrToStringAuto(membersInfo);
+                
                         return userName;
-                    }
-                  )
-                  .ToList();
+                    })
+                    .ToList();
+
                 return userNames;
             }
             finally

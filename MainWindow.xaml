@@ -7,7 +7,7 @@
         xmlns:controls="clr-namespace:WhoCan"
         mc:Ignorable="d"
         Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
-    <Grid Margin="5">
+    <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" MinHeight="100" />
             <RowDefinition Height="Auto" />
@@ -21,7 +21,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" SelectedValuePath="{Binding FileSystemInfo}" SelectedItemChanged="FoldersControl_SelectedItemChanged">
+        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" SelectedValuePath="{Binding FileSystemInfo}" SelectedItemChanged="FoldersControl_SelectedItemChanged" BorderThickness="0">
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -38,15 +38,21 @@
             </TreeView.Resources>
         </TreeView>
         <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" ItemsSource="{Binding RuleInfos}" SelectionChanged="RulesControl_SelectionChanged">
+        <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" ItemsSource="{Binding RuleInfos}" SelectionChanged="RulesControl_SelectionChanged" BorderThickness="0">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsGroup}" Value="false">
+                            <Setter Property="FontWeight" Value="Bold" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsDanger}" Value="true">
+                            <Setter Property="Foreground" Value="Red" />
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding Domain}" Value="false">
                             <Setter Property="Foreground" Value="Gray" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Deny}" Value="true">
-                            <Setter Property="Background" Value="LightGray" />
+                            <Setter Property="Foreground" Value="LightGray" />
                         </DataTrigger>
                     </Style.Triggers>
                     <Setter Property="IsSelected" Value="{Binding IsSelected}" />
@@ -61,7 +67,7 @@
             </controls:SortableListView.View>
         </controls:SortableListView>
         <GridSplitter Grid.Row="1" Grid.Column="2" ShowsPreview="False" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-        <controls:SortableListView x:Name="GroupsControl" Grid.Row="2" Grid.Column="2" ItemsSource="{Binding GroupInfos}" SelectionMode="Single">
+        <controls:SortableListView x:Name="GroupsControl" Grid.Row="2" Grid.Column="2" ItemsSource="{Binding GroupInfos}" SelectionMode="Single" BorderThickness="0">
             <controls:SortableListView.View>
                 <GridView>
                     <GridViewColumn Header="Группа" DisplayMemberBinding="{Binding GroupName}" Width="Auto" controls:SortableListView.SortPropertyName="GroupName"/>
@@ -70,12 +76,15 @@
             </controls:SortableListView.View>
         </controls:SortableListView>
         <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <controls:SortableListView x:Name="UsersControl" Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" ItemsSource="{Binding UserInfos}" SelectionChanged="UsersControl_SelectionChanged" SelectionMode="Single">
+        <controls:SortableListView x:Name="UsersControl" Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" ItemsSource="{Binding UserInfos}" SelectionChanged="UsersControl_SelectionChanged" SelectionMode="Single" BorderThickness="0">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Enabled}" Value="false">
-                            <Setter Property="Foreground" Value="Gray" />
+                            <Setter Property="Foreground" Value="LightGray" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsDanger}" Value="true">
+                            <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

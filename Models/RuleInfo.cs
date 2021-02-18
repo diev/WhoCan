@@ -19,13 +19,15 @@ namespace WhoCan.Models
 {
     public class RuleInfo : BaseObject
     {
-        public RuleInfo(string principalName, bool domain, bool deny, string flags, string comment)
+        public RuleInfo(string principalName, bool domain, bool deny, string flags, string comment, bool group, bool danger)
         {
             PrincipalName = principalName;
             Domain = domain;
             Deny = deny;
             Flags = flags;
             Comment = comment;
+            IsGroup = group;
+            IsDanger = danger;
             IsSelected = false;
         }
 
@@ -58,6 +60,19 @@ namespace WhoCan.Models
             get => GetValue<string>(nameof(Comment));
             set => SetValue(nameof(Comment), value);
         }
+
+        public bool IsGroup
+        {
+            get => GetValue<bool>(nameof(IsGroup));
+            set => SetValue(nameof(IsGroup), value);
+        }
+
+        public bool IsDanger
+        {
+            get => GetValue<bool>(nameof(IsDanger));
+            set => SetValue(nameof(IsDanger), value);
+        }
+
         public bool IsSelected
         {
             get => GetValue<bool>(nameof(IsSelected));

@@ -23,6 +23,7 @@ using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+
 using TreeViewFileExplorer;
 using TreeViewFileExplorer.ShellClasses;
 
@@ -33,6 +34,8 @@ namespace WhoCan
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const string PreSelectPath = @"G:\";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -44,6 +47,7 @@ namespace WhoCan
         private void InitializeFileSystemObjects()
         {
             var drives = DriveInfo.GetDrives();
+
             DriveInfo
                 .GetDrives()
                 .ToList()
@@ -54,8 +58,9 @@ namespace WhoCan
                     fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
                     FoldersControl.Items.Add(fileSystemObject);
                 });
+
             //PreSelect(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
-            ViewManager.PreSelect(FoldersControl, @"G:\");
+            ViewManager.PreSelect(FoldersControl, PreSelectPath);
         }
 
         #region Events
@@ -75,36 +80,42 @@ namespace WhoCan
         private void FoldersControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Cursor = Cursors.Wait;
+
             var item = (FileSystemObjectInfo)e.NewValue;
+
             var info = item.FileSystemInfo;
             string path = info.FullName;
-            
-            Title = $"WhoCan | {path}";
-
             string owner;
+            DateTime modified = new DateTime();
+
             try
             {
                 if (info is DirectoryInfo)
                 {
                     DirectorySecurity security = Directory.GetAccessControl(path);
                     owner = security.GetOwner(typeof(NTAccount)).ToString();
+                    modified = info.LastWriteTime;
                 }
                 else // if (info is FileInfo)
                 {
                     FileSecurity security = File.GetAccessControl(path);
                     owner = security.GetOwner(typeof(NTAccount)).ToString();
+                    modified = info.LastWriteTime;
                 }
             }
             catch
             {
                 owner = "?";
             }
-            Status.Text = $"Владелец: {owner}";
+
+            Title = $"WhoCan | {path}";
+            Status.Text = $"Владелец: {owner}, запись: {modified}";
 
             RulesControl.ItemsSource = null;
             RulesControl.Items.Clear();
 
             ((MainViewModel)DataContext).SelectedFileSystemObjectInfo = item;
+
             RulesControl.ItemsSource = ((MainViewModel)DataContext).GetRuleInfos();
             RulesControl.UpdateLayout();
 
@@ -112,9 +123,9 @@ namespace WhoCan
             UsersControl.Items.Clear();
 
             //if (!lightest) //TODO: Add this Option
-            {
+            //{
                 UsersControl.ItemsSource = ((MainViewModel)DataContext).GetAllUserInfos();
-            }
+            //}
             UsersControl.UpdateLayout();
 
             GroupsControl.ItemsSource = null;
@@ -127,28 +138,34 @@ namespace WhoCan
         private void RulesControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Cursor = Cursors.Wait;
+
             UsersControl.ItemsSource = null;
             UsersControl.Items.Clear();
 
             UsersControl.ItemsSource = ((MainViewModel)DataContext).GetUserInfos();
             UsersControl.UpdateLayout();
+
             Cursor = Cursors.Arrow;
         }
 
         private void UsersControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Cursor = Cursors.Wait;
+
             GroupsControl.ItemsSource = null;
             GroupsControl.Items.Clear();
+
             try
             {
                 Models.UserInfo item = (Models.UserInfo)UsersControl.SelectedItem;
+
                 if (item != null)
                 {
                     GroupsControl.ItemsSource = ((MainViewModel)DataContext).GetGroupInfos(item.UserName);
                 }
             }
             catch { }
+
             GroupsControl.UpdateLayout();
             Cursor = Cursors.Arrow;
         }
