@@ -105,9 +105,11 @@ namespace TreeViewFileExplorer.ShellClasses
                         if (HasDummy())
                         {
                             RaiseBeforeExplore();
+
                             RemoveDummy();
                             ExploreDirectories();
                             ExploreFiles();
+
                             RaiseAfterExplore();
                         }
                     }
@@ -192,8 +194,10 @@ namespace TreeViewFileExplorer.ShellClasses
                         if (!directory.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
                         {
                             var fileSystemObject = new FileSystemObjectInfo(directory);
+
                             fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
                             fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
+
                             Children.Add(fileSystemObject);
                         }
                     }

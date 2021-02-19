@@ -31,8 +31,12 @@ namespace WhoCan
 {
     public class MainViewModel : BaseObject
     {
+        private const string CommonNT = @"BANK\";
+        private const string CommonOU = ",OU=БАНК";
+        private const string CommonDC = ",DC=bank,DC=cibank,DC=ru";
+
         private readonly string[] SkipAdmins = { 
-            @"BANK\admin", 
+            CommonNT + "admin", 
             @"BUILTIN\Администраторы", @"BUILTIN\Administrators",
             @"NT AUTHORITY\СИСТЕМА", @"NT AUTHORITY\SYSTEM"
         };
@@ -48,10 +52,6 @@ namespace WhoCan
             "Прошедшие проверку",
             "Средний обязательный уровень" 
         };
-
-        private const string CommonNT = @"BANK\";
-        private const string CommonOU = ",OU=БАНК";
-        private const string CommonDC = ",DC=bank,DC=cibank,DC=ru";
 
         private const string RightDeny = "x";
         private const string RightFull = "F";
@@ -147,7 +147,7 @@ namespace WhoCan
                     {
                         flags.Append(RightDeny);
 
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Write) || rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
+                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Write | FileSystemRights.Delete))
                         {
                             flags.Append(RightWrite);
                         }
@@ -167,7 +167,7 @@ namespace WhoCan
                             flags.Append(RightRead);
                         }
 
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify) || rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
+                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify | FileSystemRights.Delete))
                         {
                             danger = true;
                             flags.Append(RightWrite);
@@ -180,17 +180,29 @@ namespace WhoCan
                     {
                         var principal = Principal.FindByIdentity(principalContext, name);
                         group = principal is GroupPrincipal;
-                    }
 
-                    RuleInfos.Add(new RuleInfo(
-                        name.Replace(CommonNT, string.Empty),
-                        name.StartsWith(CommonNT),
-                        deny,
-                        flags.ToString(),
-                        comment,
-                        group,
-                        danger)
-                    );
+                        RuleInfos.Add(new RuleInfo(
+                            name.Replace(CommonNT, string.Empty),
+                            name.StartsWith(CommonNT),
+                            deny,
+                            flags.ToString(),
+                            comment,
+                            group,
+                            danger)
+                        );
+                    }
+                    else
+                    {
+                        RuleInfos.Add(new RuleInfo(
+                            name,
+                            false,
+                            deny,
+                            flags.ToString(),
+                            comment,
+                            group,
+                            danger)
+                        );
+                    }
                 }
             }
             catch { }
@@ -205,15 +217,21 @@ namespace WhoCan
             PrincipalContext principalContext = null;
             try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
 
-            foreach (var ruleInfo in RuleInfos)
+            if (principalContext != null)
             {
-                if (ruleInfo.IsSelected)
+                foreach (var ruleInfo in RuleInfos)
                 {
-                    if (principalContext != null)
+                    if (ruleInfo.IsSelected)
                     {
                         AddUser(principalContext, ruleInfo);
                     }
-                    else
+                }
+            }
+            else
+            {
+                foreach (var ruleInfo in RuleInfos)
+                {
+                    if (ruleInfo.IsSelected)
                     {
                         AddLocalUser(ruleInfo.PrincipalName);
                     }
@@ -230,13 +248,16 @@ namespace WhoCan
             PrincipalContext principalContext = null;
             try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
 
-            foreach (var ruleInfo in RuleInfos)
+            if (principalContext != null)
             {
-                if (principalContext != null)
+                foreach (var ruleInfo in RuleInfos)
                 {
                     AddUser(principalContext, ruleInfo);
                 }
-                else
+            }
+            else
+            {
+                foreach (var ruleInfo in RuleInfos)
                 {
                     AddLocalUser(ruleInfo.PrincipalName);
                 }
@@ -244,7 +265,6 @@ namespace WhoCan
 
             return UserInfos;
         }
-
 
         private void AddUser(PrincipalContext principalContext, RuleInfo ruleInfo)
         {

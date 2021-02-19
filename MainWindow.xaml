@@ -4,9 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:classes="clr-namespace:TreeViewFileExplorer.ShellClasses"
-        xmlns:controls="clr-namespace:WhoCan"
+        xmlns:controls="clr-namespace:WhoCan" 
+        d:DataContext="{d:DesignInstance {x:Type controls:MainViewModel}}"
         mc:Ignorable="d"
         Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
+    
+    <Window.CommandBindings>
+        <CommandBinding x:Name="Copy" Command="Copy" Executed="Copy_Executed" CanExecute="Copy_CanExecute" />
+    </Window.CommandBindings>
+    
     <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" MinHeight="100" />
@@ -21,7 +27,14 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" SelectedValuePath="{Binding FileSystemInfo}" SelectedItemChanged="FoldersControl_SelectedItemChanged" BorderThickness="0">
+        
+        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" 
+                  SelectedItemChanged="FoldersControl_SelectedItemChanged" ToolTip="Выбор ресурса">
+            <TreeView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Command="ApplicationCommands.Copy" />
+                </ContextMenu>
+            </TreeView.ContextMenu>
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -29,7 +42,8 @@
                 </Style>
             </TreeView.ItemContainerStyle>
             <TreeView.Resources>
-                <HierarchicalDataTemplate DataType="{x:Type classes:FileSystemObjectInfo}" ItemsSource="{Binding Children}">
+                <HierarchicalDataTemplate DataType="{x:Type classes:FileSystemObjectInfo}" 
+                                          ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="{Binding ImageSource, UpdateSourceTrigger=PropertyChanged}" Margin="0,1,8,1"/>
                         <TextBlock Text="{Binding FileSystemInfo.Name}"/>
@@ -37,8 +51,18 @@
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView>
-        <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" ItemsSource="{Binding RuleInfos}" SelectionChanged="RulesControl_SelectionChanged" BorderThickness="0">
+        
+        <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" ShowsPreview="False" Width="3" 
+                      HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        
+        <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" 
+                                   ItemsSource="{Binding RuleInfos}" 
+                                   SelectionChanged="RulesControl_SelectionChanged" ToolTip="Права доступа">
+            <controls:SortableListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Command="ApplicationCommands.Copy" />
+                </ContextMenu>
+            </controls:SortableListView.ContextMenu>
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
@@ -60,23 +84,49 @@
             </ListView.ItemContainerStyle>
             <controls:SortableListView.View>
                 <GridView>
-                    <GridViewColumn Header="Аккаунт" DisplayMemberBinding="{Binding PrincipalName}" Width="Auto" controls:SortableListView.SortPropertyName="PrincipalName"/>
-                    <GridViewColumn Header="Права" DisplayMemberBinding="{Binding Flags}" Width="Auto" controls:SortableListView.SortPropertyName="Flags"/>
-                    <GridViewColumn Header="Подробнее" DisplayMemberBinding="{Binding Comment}" Width="Auto" controls:SortableListView.SortPropertyName="Comment"/>
+                    <GridViewColumn Header="Аккаунт" DisplayMemberBinding="{Binding PrincipalName}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="PrincipalName"/>
+                    <GridViewColumn Header="Права" DisplayMemberBinding="{Binding Flags}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="Flags"/>
+                    <GridViewColumn Header="Подробнее" DisplayMemberBinding="{Binding Comment}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="Comment"/>
                 </GridView>
             </controls:SortableListView.View>
         </controls:SortableListView>
-        <GridSplitter Grid.Row="1" Grid.Column="2" ShowsPreview="False" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-        <controls:SortableListView x:Name="GroupsControl" Grid.Row="2" Grid.Column="2" ItemsSource="{Binding GroupInfos}" SelectionMode="Single" BorderThickness="0">
+        
+        <GridSplitter Grid.Row="1" Grid.Column="2" ShowsPreview="False" Height="3" 
+                      HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+        
+        <controls:SortableListView x:Name="GroupsControl" Grid.Row="2" Grid.Column="2" 
+                                   ItemsSource="{Binding GroupInfos}" 
+                                   SelectionMode="Single" ToolTip="Группы пользователя">
+            <controls:SortableListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Command="ApplicationCommands.Copy" />
+                </ContextMenu>
+            </controls:SortableListView.ContextMenu>
             <controls:SortableListView.View>
                 <GridView>
-                    <GridViewColumn Header="Группа" DisplayMemberBinding="{Binding GroupName}" Width="Auto" controls:SortableListView.SortPropertyName="GroupName"/>
-                    <GridViewColumn Header="Описание" DisplayMemberBinding="{Binding Description}" Width="Auto" controls:SortableListView.SortPropertyName="Description"/>
+                    <GridViewColumn Header="Группа" DisplayMemberBinding="{Binding GroupName}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="GroupName"/>
+                    <GridViewColumn Header="Описание" DisplayMemberBinding="{Binding Description}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="Description"/>
                 </GridView>
             </controls:SortableListView.View>
         </controls:SortableListView>
-        <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="3" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <controls:SortableListView x:Name="UsersControl" Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" ItemsSource="{Binding UserInfos}" SelectionChanged="UsersControl_SelectionChanged" SelectionMode="Single" BorderThickness="0">
+        
+        <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="3" ShowsPreview="False" Width="3" 
+                      HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        
+        <controls:SortableListView x:Name="UsersControl" Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" 
+                                   ItemsSource="{Binding UserInfos}" 
+                                   SelectionChanged="UsersControl_SelectionChanged" 
+                                   SelectionMode="Single" ToolTip="Допущенные пользователи">
+            <controls:SortableListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Command="ApplicationCommands.Copy" />
+                </ContextMenu>
+            </controls:SortableListView.ContextMenu>
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
@@ -91,15 +141,40 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Логин" DisplayMemberBinding="{Binding UserName}" Width="Auto" controls:SortableListView.SortPropertyName="UserName"/>
-                    <GridViewColumn Header="Имя" DisplayMemberBinding="{Binding Name}" Width="Auto" controls:SortableListView.SortPropertyName="Name"/>
-                    <GridViewColumn Header="Фамилия" DisplayMemberBinding="{Binding Family}" Width="Auto" controls:SortableListView.SortPropertyName="Family"/>
-                    <GridViewColumn Header="Подробнее" DisplayMemberBinding="{Binding Comment}" Width="Auto" controls:SortableListView.SortPropertyName="Comment"/>
+                    <GridViewColumn Header="Логин" DisplayMemberBinding="{Binding UserName}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="UserName"/>
+                    <GridViewColumn Header="Имя" DisplayMemberBinding="{Binding Name}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="Name"/>
+                    <GridViewColumn Header="Фамилия" DisplayMemberBinding="{Binding Family}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="Family"/>
+                    <GridViewColumn Header="Подробнее" DisplayMemberBinding="{Binding Comment}" Width="Auto" 
+                                    controls:SortableListView.SortPropertyName="Comment"/>
                 </GridView>
             </ListView.View>
         </controls:SortableListView>
-        <StatusBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5" Margin="0,0,0,0">
-            <TextBlock x:Name="Status">Готово</TextBlock>
+        
+        <StatusBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            
+            <StatusBarItem Grid.Column="0" ToolTip="Последняя запись">
+                <TextBlock x:Name="LastWrite" Text="Готово" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1" ToolTip="Ресурс">
+                <TextBlock x:Name="Path" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="2" HorizontalContentAlignment="Center" ToolTip="Владелец">
+                <TextBlock x:Name="PathOwner" />
+            </StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>

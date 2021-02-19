@@ -21,12 +21,15 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
 using TreeViewFileExplorer;
 using TreeViewFileExplorer.ShellClasses;
+
+using WhoCan.Models;
 
 namespace WhoCan
 {
@@ -41,6 +44,8 @@ namespace WhoCan
         {
             InitializeComponent();
             InitializeFileSystemObjects();
+
+            Title = $"{App.Title} v{App.Version.ToString(3)}";
 
             DataContext = new MainViewModel();
         }
@@ -86,8 +91,8 @@ namespace WhoCan
 
             var info = item.FileSystemInfo;
             string path = info.FullName;
-            string owner;
-            DateTime modified = new DateTime();
+            FoldersControl.SelectedValuePath = path;
+            string owner = string.Empty;
 
             try
             {
@@ -102,26 +107,20 @@ namespace WhoCan
                     owner = security.GetOwner(typeof(NTAccount)).ToString();
                 }
 
-                try
+                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
+                var principal = Principal.FindByIdentity(principalContext, owner);
+                string name = principal.DisplayName;
+
+                if (name.Length > 0)
                 {
-                    PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
-                    var principal = Principal.FindByIdentity(principalContext, owner);
-                    string name = principal.DisplayName;
-
-                    if (name.Length > 0)
-                    {
-                        owner += $" ({name})";
-                    }
+                    owner += $" ({name})";
                 }
-                catch { }
             }
-            catch
-            {
-                owner = "?";
-            }
+            catch { }
 
-            Title = $"WhoCan | {path}";
-            Status.Text = $"Владелец: {owner}, запись: {info.LastWriteTime}";
+            Path.Text = path;
+            PathOwner.Text = owner;
+            LastWrite.Text = info.LastWriteTime.ToString();
 
             RulesControl.ItemsSource = null;
             RulesControl.Items.Clear();
@@ -180,6 +179,116 @@ namespace WhoCan
 
             GroupsControl.UpdateLayout();
             Cursor = Cursors.Arrow;
+        }
+
+        private void Copy_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            var path = FoldersControl.SelectedValuePath;
+            var result = new StringBuilder();
+            char tab = '\t';
+
+            if (e.Source.Equals(FoldersControl))
+            {
+                Clipboard.SetText(path);
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Source.Equals(RulesControl))
+            {
+                result.Append("Ресурс").Append(tab);
+                result.Append("Тип").Append(tab);
+                result.Append("Аккаунт").Append(tab);
+                result.Append("Права").Append(tab);
+                result.AppendLine("Подробнее");
+
+                foreach (RuleInfo item in RulesControl.Items)
+                {
+                    result.Append(path).Append(tab);
+                    result.Append(item.IsGroup ? "Группа" : "Пользователь").Append(tab);
+                    result.Append(item.PrincipalName).Append(tab);
+                    result.Append(item.Flags).Append(tab);
+                    result.AppendLine(item.Comment);
+                }
+
+                Clipboard.SetText(result.ToString());
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Source.Equals(UsersControl))
+            {
+                result.Append("Ресурс").Append(tab);
+                result.Append("Логин").Append(tab);
+                result.Append("Права").Append(tab);
+                result.Append("Имя").Append(tab);
+                result.Append("Фамилия").Append(tab);
+                result.Append("Имя Фамилия").Append(tab);
+                result.AppendLine("Подробнее");
+
+                foreach (UserInfo item in UsersControl.Items)
+                {
+                    //if (item.Enabled)
+                    {
+                        result.Append(path).Append(tab);
+                        result.Append(item.UserName).Append(tab);
+                        result.Append(item.IsDanger ? "RW" : "R").Append(tab);
+                        result.Append(item.Name).Append(tab);
+                        result.Append(item.Family).Append(tab);
+                        result.Append(item.DisplayName).Append(tab);
+                        result.AppendLine(item.Comment);
+                    }
+                }
+
+                Clipboard.SetText(result.ToString());
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Source.Equals(GroupsControl))
+            {
+                UserInfo userInfo = (UserInfo)UsersControl.SelectedItem;
+
+                result.Append("Пользователь").Append(tab);
+                result.Append("Имя Фамилия").Append(tab);
+                result.Append("Группа").Append(tab);
+                result.AppendLine("Подробнее");
+
+                foreach (GroupInfo item in GroupsControl.Items)
+                {
+                    result.Append(userInfo.UserName).Append(tab);
+                    result.Append(userInfo.DisplayName).Append(tab);
+                    result.Append(item.GroupName).Append(tab);
+                    result.AppendLine(item.Description);
+                }
+
+                Clipboard.SetText(result.ToString());
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void Copy_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (e.Source.Equals(FoldersControl))
+            {
+                e.CanExecute = FoldersControl.SelectedItem != null;
+            }
+
+            if (e.Source.Equals(RulesControl))
+            {
+                e.CanExecute = RulesControl.HasItems;
+            }
+
+            if (e.Source.Equals(UsersControl))
+            {
+                e.CanExecute = UsersControl.HasItems;
+            }
+
+            if (e.Source.Equals(GroupsControl))
+            {
+                e.CanExecute = GroupsControl.HasItems;
+            }
         }
     }
 }

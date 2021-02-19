@@ -15,6 +15,8 @@
 //------------------------------------------------------------------------------
 #endregion
 
+using System;
+using System.Reflection;
 using System.Windows;
 
 namespace WhoCan
@@ -24,5 +26,22 @@ namespace WhoCan
     /// </summary>
     public partial class App : Application
     {
+        public static string Title;
+        public static Version Version;
+
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+            var asm = Assembly.GetExecutingAssembly().GetName();
+            Title = asm.Name;
+            Version = asm.Version;
+
+            //var window = new MainWindow
+            //{
+            //    Title = Title
+            //};
+            //window.Version.Text = "v" + Version.ToString(3);
+
+            //window.Show();
+        }
     }
 }
