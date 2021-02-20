@@ -38,7 +38,7 @@ namespace WhoCan
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const string PreSelectPath = @"G:\";
+        private const string PreSelectPath = ""; //@"C:\Program Files\7-Zip\Lang"; // @"G:\"; //TODO
 
         public MainWindow()
         {
@@ -66,7 +66,10 @@ namespace WhoCan
                 });
 
             //PreSelect(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
-            ViewManager.PreSelect(FoldersControl, PreSelectPath);
+            if (!string.IsNullOrEmpty(PreSelectPath))
+            {
+                ViewManager.PreSelect(FoldersControl, PreSelectPath);
+            }
         }
 
         #region Events
@@ -187,10 +190,16 @@ namespace WhoCan
             var result = new StringBuilder();
             char tab = '\t';
 
-            if (e.Source.Equals(FoldersControl))
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
             {
+                if (path.Contains(" "))
+                {
+                    path = $"\"{path}\"";
+                }
+
                 Clipboard.SetText(path);
                 e.Handled = true;
+
                 return;
             }
 
@@ -213,6 +222,7 @@ namespace WhoCan
 
                 Clipboard.SetText(result.ToString());
                 e.Handled = true;
+
                 return;
             }
 
@@ -242,6 +252,7 @@ namespace WhoCan
 
                 Clipboard.SetText(result.ToString());
                 e.Handled = true;
+
                 return;
             }
 
@@ -264,13 +275,14 @@ namespace WhoCan
 
                 Clipboard.SetText(result.ToString());
                 e.Handled = true;
+
                 return;
             }
         }
 
         private void Copy_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            if (e.Source.Equals(FoldersControl))
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
             {
                 e.CanExecute = FoldersControl.SelectedItem != null;
             }
@@ -288,6 +300,33 @@ namespace WhoCan
             if (e.Source.Equals(GroupsControl))
             {
                 e.CanExecute = GroupsControl.HasItems;
+            }
+        }
+
+        private void Paste_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
+            {
+                var path = Clipboard.GetText();
+                ViewManager.PreSelect(FoldersControl, path);
+                e.Handled = true;
+
+                return;
+            }
+        }
+
+        private void Paste_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
+            {
+                var path = Clipboard.GetText();
+
+                if (path.StartsWith("\""))
+                {
+                    path = path.Replace("\"", string.Empty).Trim();
+                }
+
+                e.CanExecute = Directory.Exists(path) || File.Exists(path);
             }
         }
     }

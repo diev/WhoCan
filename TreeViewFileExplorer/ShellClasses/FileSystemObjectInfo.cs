@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 using TreeViewFileExplorer.Enums;
 
-using WhoCan.Models;
+using WhoCan.Models; // BaseObject
 
 namespace TreeViewFileExplorer.ShellClasses
 {
@@ -94,7 +94,7 @@ namespace TreeViewFileExplorer.ShellClasses
         {
             if (FileSystemInfo is DirectoryInfo)
             {
-                if (string.Equals(e.PropertyName, "IsExpanded", StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(e.PropertyName, nameof(IsExpanded), StringComparison.CurrentCultureIgnoreCase))
                 {
                     RaiseBeforeExpand();
 
@@ -129,32 +129,32 @@ namespace TreeViewFileExplorer.ShellClasses
 
         public ObservableCollection<FileSystemObjectInfo> Children
         {
-            get => GetValue<ObservableCollection<FileSystemObjectInfo>>("Children");
-            private set => SetValue("Children", value);
+            get => GetValue<ObservableCollection<FileSystemObjectInfo>>(nameof(Children));
+            private set => SetValue(nameof(Children), value);
         }
 
         public ImageSource ImageSource
         {
-            get => GetValue<ImageSource>("ImageSource");
-            private set => SetValue("ImageSource", value);
+            get => GetValue<ImageSource>(nameof(ImageSource));
+            private set => SetValue(nameof(ImageSource), value);
         }
 
         public bool IsExpanded
         {
-            get => GetValue<bool>("IsExpanded");
-            set => SetValue("IsExpanded", value);
+            get => GetValue<bool>(nameof(IsExpanded));
+            set => SetValue(nameof(IsExpanded), value);
         }
 
         public FileSystemInfo FileSystemInfo
         {
-            get => GetValue<FileSystemInfo>("FileSystemInfo");
-            private set => SetValue("FileSystemInfo", value);
+            get => GetValue<FileSystemInfo>(nameof(FileSystemInfo));
+            private set => SetValue(nameof(FileSystemInfo), value);
         }
 
         private DriveInfo Drive
         {
-            get => GetValue<DriveInfo>("Drive");
-            set => SetValue("Drive", value);
+            get => GetValue<DriveInfo>(nameof(Drive));
+            set => SetValue(nameof(Drive), value);
         }
 
         #endregion
@@ -187,20 +187,24 @@ namespace TreeViewFileExplorer.ShellClasses
             {
                 if (FileSystemInfo is DirectoryInfo info)
                 {
-                    var directories = info.EnumerateDirectories().OrderBy(d => d.Name);
-
-                    foreach (var directory in directories)
+                    try
                     {
-                        if (!directory.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
+                        var directories = info.GetDirectories().OrderBy(d => d.Name);
+
+                        foreach (var dir in directories)
                         {
-                            var fileSystemObject = new FileSystemObjectInfo(directory);
+                            if (!dir.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
+                            {
+                                var fileSystemObject = new FileSystemObjectInfo(dir);
 
-                            fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
-                            fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
+                                fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
+                                fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
 
-                            Children.Add(fileSystemObject);
+                                Children.Add(fileSystemObject);
+                            }
                         }
                     }
+                    catch { } //UnauthorizedAccessException!
                 }
             }
         }
@@ -221,15 +225,19 @@ namespace TreeViewFileExplorer.ShellClasses
             {
                 if (FileSystemInfo is DirectoryInfo info)
                 {
-                    var files = info.EnumerateFiles().OrderBy(d => d.Name);
-
-                    foreach (var file in files)
+                    try
                     {
-                        if (!file.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
+                        var files = info.EnumerateFiles().OrderBy(d => d.Name);
+
+                        foreach (var file in files)
                         {
-                            Children.Add(new FileSystemObjectInfo(file));
+                            if (!file.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
+                            {
+                                Children.Add(new FileSystemObjectInfo(file));
+                            }
                         }
                     }
+                    catch { } //UnauthorizedAccessException!
                 }
             }
         }

@@ -26,17 +26,20 @@ namespace TreeViewFileExplorer
 {
     public static class ViewManager
     {
+        private static bool _found;
+
         #region Methods
 
         public static void PreSelect(TreeView tree, string path)
         {
-            if (!Directory.Exists(path))
+            if (path.StartsWith("\""))
             {
-                return;
+                path = path.Replace("\"", string.Empty).Trim();
             }
 
             var driveInfo = GetDriveFileSystemObjectInfo(tree, path);
             driveInfo.IsExpanded = true;
+            _found = false;
 
             PreSelect(driveInfo, path);
         }
@@ -45,14 +48,18 @@ namespace TreeViewFileExplorer
         {
             foreach (var childInfo in info.Children)
             {
-                if (childInfo.FileSystemInfo.FullName.Equals(path))
+                if (path.StartsWith(childInfo.FileSystemInfo.FullName))
                 {
-                    return; /* We found the item for pre-selection */
+                    if (childInfo.FileSystemInfo.FullName.Equals(path))
+                    {
+                        _found = true;
+                        return; /* We found the item for pre-selection */
+                    }
+
+                    childInfo.IsExpanded = true;
+                    PreSelect(childInfo, path);
+                    if (_found) return;
                 }
-
-                childInfo.IsExpanded = true;
-
-                PreSelect(childInfo, path);
             }
         }
 

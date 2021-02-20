@@ -28,11 +28,10 @@ namespace WhoCan
         private GridViewColumnHeader _lastHeaderClicked = null;
         private ListSortDirection _lastDirection = ListSortDirection.Ascending;
 
-        public SortableListView()
-        {
+        public SortableListView() =>
             // register a handler for the GridViewColumnHeader's Click Event
-            this.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
-        }
+            //this.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
+            AddHandler(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
 
         private void Sort(string sortBy, ListSortDirection direction)
         {
@@ -55,20 +54,13 @@ namespace WhoCan
 
             if (e.OriginalSource is GridViewColumnHeader headerClicked && headerClicked.Role != GridViewColumnHeaderRole.Padding)
             {
-                if (headerClicked != _lastHeaderClicked)
+                if (headerClicked != _lastHeaderClicked || _lastDirection != ListSortDirection.Ascending)
                 {
                     direction = ListSortDirection.Ascending;
                 }
                 else
                 {
-                    if (_lastDirection == ListSortDirection.Ascending)
-                    {
-                        direction = ListSortDirection.Descending;
-                    }
-                    else
-                    {
-                        direction = ListSortDirection.Ascending;
-                    }
+                    direction = ListSortDirection.Descending;
                 }
 
                 // see if we have an attached SortPropertyName value

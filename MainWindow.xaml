@@ -3,14 +3,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:classes="clr-namespace:TreeViewFileExplorer.ShellClasses"
-        xmlns:controls="clr-namespace:WhoCan" 
-        d:DataContext="{d:DesignInstance {x:Type controls:MainViewModel}}"
+        xmlns:main="clr-namespace:WhoCan"
+        xmlns:tree="clr-namespace:TreeViewFileExplorer.ShellClasses"
+        xmlns:controls="clr-namespace:WhoCan"
+        d:DataContext="{d:DesignInstance {x:Type main:MainViewModel}}"
         mc:Ignorable="d"
         Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
     
     <Window.CommandBindings>
         <CommandBinding x:Name="Copy" Command="Copy" Executed="Copy_Executed" CanExecute="Copy_CanExecute" />
+        <CommandBinding x:Name="Paste" Command="Paste" Executed="Paste_Executed" CanExecute="Paste_CanExecute" />
     </Window.CommandBindings>
     
     <Grid Margin="0">
@@ -33,6 +35,7 @@
             <TreeView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />
+                    <MenuItem Command="ApplicationCommands.Paste" />
                 </ContextMenu>
             </TreeView.ContextMenu>
             <TreeView.ItemContainerStyle>
@@ -42,7 +45,7 @@
                 </Style>
             </TreeView.ItemContainerStyle>
             <TreeView.Resources>
-                <HierarchicalDataTemplate DataType="{x:Type classes:FileSystemObjectInfo}" 
+                <HierarchicalDataTemplate DataType="{x:Type tree:FileSystemObjectInfo}" 
                                           ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="{Binding ImageSource, UpdateSourceTrigger=PropertyChanged}" Margin="0,1,8,1"/>
@@ -170,7 +173,14 @@
                 <TextBlock x:Name="LastWrite" Text="Готово" />
             </StatusBarItem>
             <StatusBarItem Grid.Column="1" ToolTip="Ресурс">
-                <TextBlock x:Name="Path" />
+                <TextBlock x:Name="Path" TextWrapping="Wrap" >
+                    <TextBlock.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="ApplicationCommands.Copy" />
+                            <MenuItem Command="ApplicationCommands.Paste" />
+                        </ContextMenu>
+                    </TextBlock.ContextMenu>
+                </TextBlock>
             </StatusBarItem>
             <StatusBarItem Grid.Column="2" HorizontalContentAlignment="Center" ToolTip="Владелец">
                 <TextBlock x:Name="PathOwner" />
