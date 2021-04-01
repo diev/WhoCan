@@ -38,7 +38,7 @@ namespace WhoCan
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const string PreSelectPath = ""; //@"C:\Program Files\7-Zip\Lang"; // @"G:\"; //TODO
+        private string PreSelectPath = ""; //@"C:\Program Files\7-Zip\Lang"; // @"G:\"; //TODO
 
         public MainWindow()
         {
@@ -46,14 +46,35 @@ namespace WhoCan
             InitializeFileSystemObjects();
 
             Title = $"{App.Title} v{App.Version.ToString(3)}";
+        }
 
-            DataContext = new MainViewModel();
+        public void Refresh()
+        {
+            Cursor = Cursors.Wait;
+
+            PreSelectPath = FoldersControl.SelectedValuePath;
+            FoldersControl.Items.Clear();
+            InitializeFileSystemObjects();
+
+            //var context = (MainViewModel)DataContext;
+
+            RulesControl.ItemsSource = null;
+            //RulesControl.Items.Clear();
+            //RulesControl.UpdateLayout();
+
+            UsersControl.ItemsSource = null;
+            //UsersControl.Items.Clear();
+            //UsersControl.UpdateLayout();
+
+            GroupsControl.ItemsSource = null;
+            //GroupsControl.Items.Clear();
+            //GroupsControl.UpdateLayout();
+
+            Cursor = Cursors.Arrow;
         }
 
         private void InitializeFileSystemObjects()
         {
-            var drives = DriveInfo.GetDrives();
-
             DriveInfo
                 .GetDrives()
                 .ToList()
@@ -88,9 +109,10 @@ namespace WhoCan
 
         private void FoldersControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            Cursor = Cursors.Wait;
-
             var item = (FileSystemObjectInfo)e.NewValue;
+            if (item == null) return;
+
+            Cursor = Cursors.Wait;
 
             var info = item.FileSystemInfo;
             string path = info.FullName;
@@ -128,9 +150,10 @@ namespace WhoCan
             RulesControl.ItemsSource = null;
             RulesControl.Items.Clear();
 
-            ((MainViewModel)DataContext).SelectedFileSystemObjectInfo = item;
+            var context = (MainViewModel)DataContext;
+            context.SelectedFileSystemObjectInfo = item;
 
-            RulesControl.ItemsSource = ((MainViewModel)DataContext).GetRuleInfos();
+            RulesControl.ItemsSource = context.GetRuleInfos();
             RulesControl.UpdateLayout();
 
             UsersControl.ItemsSource = null;
@@ -138,7 +161,7 @@ namespace WhoCan
 
             //if (!lightest) //TODO: Add this Option
             //{
-                UsersControl.ItemsSource = ((MainViewModel)DataContext).GetAllUserInfos();
+                UsersControl.ItemsSource = context.GetAllUserInfos();
             //}
             UsersControl.UpdateLayout();
 
@@ -156,7 +179,8 @@ namespace WhoCan
             UsersControl.ItemsSource = null;
             UsersControl.Items.Clear();
 
-            UsersControl.ItemsSource = ((MainViewModel)DataContext).GetUserInfos();
+            var context = (MainViewModel)DataContext;
+            UsersControl.ItemsSource = context.GetUserInfos();
             UsersControl.UpdateLayout();
 
             Cursor = Cursors.Arrow;
@@ -171,11 +195,12 @@ namespace WhoCan
 
             try
             {
-                Models.UserInfo item = (Models.UserInfo)UsersControl.SelectedItem;
+                UserInfo item = (Models.UserInfo)UsersControl.SelectedItem;
 
                 if (item != null)
                 {
-                    GroupsControl.ItemsSource = ((MainViewModel)DataContext).GetGroupInfos(item.UserName);
+                    var context = (MainViewModel)DataContext;
+                    GroupsControl.ItemsSource = context.GetGroupInfos(item.UserName);
                 }
             }
             catch { }
@@ -328,6 +353,11 @@ namespace WhoCan
 
                 e.CanExecute = Directory.Exists(path) || File.Exists(path);
             }
+        }
+
+        private void MenuRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            Refresh();
         }
     }
 }

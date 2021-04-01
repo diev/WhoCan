@@ -31,52 +31,13 @@ namespace WhoCan.Models
             IsSelected = false;
         }
 
-        public string PrincipalName
-        {
-            get => GetValue<string>(nameof(PrincipalName));
-            set => SetValue(nameof(PrincipalName), value);
-        }
-
-        public bool Domain
-        {
-            get => GetValue<bool>(nameof(Domain));
-            set => SetValue(nameof(Domain), value);
-        }
-
-        public bool Deny
-        {
-            get => GetValue<bool>(nameof(Deny));
-            set => SetValue(nameof(Deny), value);
-        }
-
-        public string Flags
-        {
-            get => GetValue<string>(nameof(Flags));
-            set => SetValue(nameof(Flags), value);
-        }
-
-        public string Comment
-        {
-            get => GetValue<string>(nameof(Comment));
-            set => SetValue(nameof(Comment), value);
-        }
-
-        public bool IsGroup
-        {
-            get => GetValue<bool>(nameof(IsGroup));
-            set => SetValue(nameof(IsGroup), value);
-        }
-
-        public bool IsDanger
-        {
-            get => GetValue<bool>(nameof(IsDanger));
-            set => SetValue(nameof(IsDanger), value);
-        }
-
-        public bool IsSelected
-        {
-            get => GetValue<bool>(nameof(IsSelected));
-            set => SetValue(nameof(IsSelected), value);
-        }
+        public string PrincipalName { get; set; }
+        public bool Domain { get; set; }
+        public bool Deny { get; set; }
+        public string Flags { get; set; }
+        public string Comment { get; set; }
+        public bool IsGroup { get; set; }
+        public bool IsDanger { get; set; }
+        public bool IsSelected { get; set; }
     }
 }

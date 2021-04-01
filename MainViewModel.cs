@@ -69,23 +69,9 @@ namespace WhoCan
             GroupInfos = new ObservableCollection<GroupInfo>();
         }
 
-        public FileSystemObjectInfo SelectedFileSystemObjectInfo
-        {
-            get => GetValue<FileSystemObjectInfo>(nameof(SelectedFileSystemObjectInfo));
-            set => SetValue(nameof(SelectedFileSystemObjectInfo), value);
-        }
-
-        public UserInfo SelectedUserInfo
-        {
-            get => GetValue<UserInfo>(nameof(SelectedUserInfo));
-            set => SetValue(nameof(SelectedUserInfo), value);
-        }
-
-        public GroupInfo SelectedGroupInfo
-        {
-            get => GetValue<GroupInfo>(nameof(SelectedGroupInfo));
-            set => SetValue(nameof(SelectedGroupInfo), value);
-        }
+        public FileSystemObjectInfo SelectedFileSystemObjectInfo { get; set; }
+        public UserInfo SelectedUserInfo { get; set; }
+        public GroupInfo SelectedGroupInfo { get; set; }
 
         public ObservableCollection<RuleInfo> GetRuleInfos()
         {

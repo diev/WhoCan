@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 using TreeViewFileExplorer.Enums;
 
-using WhoCan.Models; // BaseObject
+using WhoCan.Models;
 
 namespace TreeViewFileExplorer.ShellClasses
 {
@@ -59,11 +59,8 @@ namespace TreeViewFileExplorer.ShellClasses
         #region Events
 
         public event EventHandler BeforeExpand;
-
         public event EventHandler AfterExpand;
-
         public event EventHandler BeforeExplore;
-
         public event EventHandler AfterExplore;
 
         private void RaiseBeforeExpand()
@@ -127,35 +124,11 @@ namespace TreeViewFileExplorer.ShellClasses
 
         #region Properties
 
-        public ObservableCollection<FileSystemObjectInfo> Children
-        {
-            get => GetValue<ObservableCollection<FileSystemObjectInfo>>(nameof(Children));
-            private set => SetValue(nameof(Children), value);
-        }
-
-        public ImageSource ImageSource
-        {
-            get => GetValue<ImageSource>(nameof(ImageSource));
-            private set => SetValue(nameof(ImageSource), value);
-        }
-
-        public bool IsExpanded
-        {
-            get => GetValue<bool>(nameof(IsExpanded));
-            set => SetValue(nameof(IsExpanded), value);
-        }
-
-        public FileSystemInfo FileSystemInfo
-        {
-            get => GetValue<FileSystemInfo>(nameof(FileSystemInfo));
-            private set => SetValue(nameof(FileSystemInfo), value);
-        }
-
-        private DriveInfo Drive
-        {
-            get => GetValue<DriveInfo>(nameof(Drive));
-            set => SetValue(nameof(Drive), value);
-        }
+        public ObservableCollection<FileSystemObjectInfo> Children { get; set; }
+        public ImageSource ImageSource { get; set; }
+        public bool IsExpanded { get; set; }
+        public FileSystemInfo FileSystemInfo { get; set; }
+        private DriveInfo Drive { get; set; }
 
         #endregion
 

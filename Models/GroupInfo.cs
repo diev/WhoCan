@@ -28,17 +28,8 @@ namespace WhoCan.Models
             Description = description;
         }
 
-        public string GroupName
-        {
-            get => GetValue<string>(nameof(GroupName));
-            private set => SetValue(nameof(GroupName), value);
-        }
-
-        public string Description
-        {
-            get => GetValue<string>(nameof(Description));
-            private set => SetValue(nameof(Description), value);
-        }
+        public string GroupName { get; set; }
+        public string Description { get; set; }
 
         public override bool Equals(object obj)
         {

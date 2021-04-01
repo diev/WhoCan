@@ -96,7 +96,6 @@
     <Compile Include="TreeViewFileExplorer\FileManager.cs" />
     <Compile Include="TreeViewFileExplorer\FolderManager.cs" />
     <Compile Include="TreeViewFileExplorer\Interop.cs" />
-    <Compile Include="Models\PropertyNotifier.cs" />
     <Compile Include="TreeViewFileExplorer\ShellClasses\DummyFileSystemObjectInfo.cs" />
     <Compile Include="TreeViewFileExplorer\ShellClasses\FileSystemObjectInfo.cs" />
     <Compile Include="TreeViewFileExplorer\ShellManager.cs" />

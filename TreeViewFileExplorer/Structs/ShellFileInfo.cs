@@ -25,9 +25,7 @@ namespace TreeViewFileExplorer.Structs
     public struct ShellFileInfo
     {
         public IntPtr hIcon;
-
         public int iIcon;
-
         public uint dwAttributes;
 
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]

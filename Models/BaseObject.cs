@@ -17,42 +17,48 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace WhoCan.Models
 {
     [Serializable]
-    public abstract class BaseObject : PropertyNotifier
+    public abstract class BaseObject : INotifyPropertyChanged
     {
         private readonly IDictionary<string, object> _values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
+        [field: NonSerialized]
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public T GetValue<T>(string key)
         {
-            var value = GetValue(key);
-            return (value is T t) ? t : default;
+            return (GetValue(key) is T t)
+                ? t 
+                : default;
         }
 
         private object GetValue(string key)
         {
-            if (string.IsNullOrEmpty(key))
+            if (_values.TryGetValue(key, out object stored))
             {
-                return null;
+                return stored;
             }
-
-            return _values.ContainsKey(key) ? _values[key] : null;
+            return null;
         }
 
         public void SetValue(string key, object value)
         {
-            if (!_values.ContainsKey(key))
+            if (_values.TryGetValue(key, out object stored))
             {
-                _values.Add(key, value);
+                if (value.Equals(stored)) return;
+
+                _values[key] = value;
             }
             else
             {
-                _values[key] = value;
+                _values.Add(key, value);
             }
 
-            OnPropertyChanged(key);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(key));
         }
     }
 }

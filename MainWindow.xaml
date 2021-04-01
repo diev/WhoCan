@@ -9,6 +9,10 @@
         d:DataContext="{d:DesignInstance {x:Type main:MainViewModel}}"
         mc:Ignorable="d"
         Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <main:MainViewModel/>
+    </Window.DataContext>
     
     <Window.CommandBindings>
         <CommandBinding x:Name="Copy" Command="Copy" Executed="Copy_Executed" CanExecute="Copy_CanExecute" />
@@ -30,12 +34,14 @@
             <ColumnDefinition Width="*" MinWidth="100" />
         </Grid.ColumnDefinitions>
         
-        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" 
+        <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
                   SelectedItemChanged="FoldersControl_SelectedItemChanged" ToolTip="Выбор ресурса">
             <TreeView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />
                     <MenuItem Command="ApplicationCommands.Paste" />
+                    <Separator/>
+                    <MenuItem Header="Обновить" Click="MenuRefresh_Click"/>
                 </ContextMenu>
             </TreeView.ContextMenu>
             <TreeView.ItemContainerStyle>
@@ -57,7 +63,7 @@
         
         <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" ShowsPreview="False" Width="3" 
                       HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        
+
         <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" 
                                    ItemsSource="{Binding RuleInfos}" 
                                    SelectionChanged="RulesControl_SelectionChanged" ToolTip="Права доступа">

@@ -33,47 +33,13 @@ namespace WhoCan.Models
             IsDanger = danger;
         }
 
-        public string UserName
-        {
-            get => GetValue<string>(nameof(UserName));
-            private set => SetValue(nameof(UserName), value);
-        }
-
-        public bool Enabled
-        {
-            get => GetValue<bool>(nameof(Enabled));
-            private set => SetValue(nameof(Enabled), value);
-        }
-
-        public string DisplayName
-        {
-            get => GetValue<string>(nameof(DisplayName));
-            private set => SetValue(nameof(DisplayName), value);
-        }
-
-        public string Name
-        {
-            get => GetValue<string>(nameof(Name));
-            private set => SetValue(nameof(Name), value);
-        }
-
-        public string Family
-        {
-            get => GetValue<string>(nameof(Family));
-            private set => SetValue(nameof(Family), value);
-        }
-
-        public string Comment
-        {
-            get => GetValue<string>(nameof(Comment));
-            private set => SetValue(nameof(Comment), value);
-        }
-
-        public bool IsDanger
-        {
-            get => GetValue<bool>(nameof(IsDanger));
-            set => SetValue(nameof(IsDanger), value);
-        }
+        public string UserName { get; set; }
+        public bool Enabled { get; set; }
+        public string DisplayName { get; set; }
+        public string Name { get; set; }
+        public string Family { get; set; }
+        public string Comment { get; set; }
+        public bool IsDanger { get; set; }
 
         public override bool Equals(object obj)
         {
