@@ -14,6 +14,7 @@
 // limitations under the License.
 //------------------------------------------------------------------------------
 // (c) https://github.com/mikependon/Tutorials/tree/master/WPF/TreeViewFileExplorer
+// (c) https://medium.com/@mikependon/designing-a-wpf-treeview-file-explorer-565a3f13f6f2
 #endregion
 
 using System;
@@ -25,12 +26,13 @@ using System.Windows.Media;
 
 using TreeViewFileExplorer.Enums;
 
-using WhoCan.Models;
-
 namespace TreeViewFileExplorer.ShellClasses
 {
-    public class FileSystemObjectInfo : BaseObject
+    public class FileSystemObjectInfo : BaseFileSystemObjectInfo
     {
+        public FileSystemObjectInfo(DriveInfo drive)
+            : this(drive.RootDirectory) { }
+
         public FileSystemObjectInfo(FileSystemInfo info)
         {
             if (this is DummyFileSystemObjectInfo)
@@ -53,8 +55,6 @@ namespace TreeViewFileExplorer.ShellClasses
 
             PropertyChanged += new PropertyChangedEventHandler(FileSystemObjectInfo_PropertyChanged);
         }
-
-        public FileSystemObjectInfo(DriveInfo drive) : this(drive.RootDirectory) { }
 
         #region Events
 
@@ -103,9 +103,12 @@ namespace TreeViewFileExplorer.ShellClasses
                         {
                             RaiseBeforeExplore();
 
-                            RemoveDummy();
-                            ExploreDirectories();
-                            ExploreFiles();
+                            if (!(Drive?.IsReady == false))
+                            {
+                                RemoveDummy();
+                                ExploreDirectories();
+                                ExploreFiles();
+                            }
 
                             RaiseAfterExplore();
                         }
@@ -124,11 +127,35 @@ namespace TreeViewFileExplorer.ShellClasses
 
         #region Properties
 
-        public ObservableCollection<FileSystemObjectInfo> Children { get; set; }
-        public ImageSource ImageSource { get; set; }
-        public bool IsExpanded { get; set; }
-        public FileSystemInfo FileSystemInfo { get; set; }
-        private DriveInfo Drive { get; set; }
+        public ObservableCollection<FileSystemObjectInfo> Children
+        {
+            get => base.GetValue<ObservableCollection<FileSystemObjectInfo>>(nameof(Children));
+            private set => base.SetValue(nameof(Children), value);
+        }
+
+        public ImageSource ImageSource
+        {
+            get => base.GetValue<ImageSource>(nameof(ImageSource));
+            private set => base.SetValue(nameof(ImageSource), value);
+        }
+
+        public bool IsExpanded // base is required here for the proper action!
+        {
+            get => base.GetValue<bool>(nameof(IsExpanded));
+            set => base.SetValue(nameof(IsExpanded), value);
+        }
+
+        public FileSystemInfo FileSystemInfo
+        {
+            get => base.GetValue<FileSystemInfo>(nameof(FileSystemInfo));
+            private set => base.SetValue(nameof(FileSystemInfo), value);
+        }
+
+        private DriveInfo Drive
+        {
+            get => base.GetValue<DriveInfo>(nameof(Drive));
+            set => base.SetValue(nameof(Drive), value);
+        }
 
         #endregion
 
@@ -141,7 +168,7 @@ namespace TreeViewFileExplorer.ShellClasses
 
         private bool HasDummy()
         {
-            return GetDummy() != null;
+            return GetDummy() is object;
         }
 
         private DummyFileSystemObjectInfo GetDummy()
@@ -156,28 +183,20 @@ namespace TreeViewFileExplorer.ShellClasses
 
         private void ExploreDirectories()
         {
-            if (Drive?.IsReady != false)
+            var info = (DirectoryInfo)FileSystemInfo;
+            var directories = info.GetDirectories();
+
+            foreach (var directory in directories.OrderBy(d => d.Name))
             {
-                if (FileSystemInfo is DirectoryInfo info)
+                if (!directory.Attributes.HasFlag(FileAttributes.System) &&
+                    !directory.Attributes.HasFlag(FileAttributes.Hidden))
                 {
-                    try
-                    {
-                        var directories = info.GetDirectories().OrderBy(d => d.Name);
+                    var fileSystemObject = new FileSystemObjectInfo(directory);
 
-                        foreach (var dir in directories)
-                        {
-                            if (!dir.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
-                            {
-                                var fileSystemObject = new FileSystemObjectInfo(dir);
-
-                                fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
-                                fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
-
-                                Children.Add(fileSystemObject);
-                            }
-                        }
-                    }
-                    catch { } //UnauthorizedAccessException!
+                    fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
+                    fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
+                    
+                    Children.Add(fileSystemObject);
                 }
             }
         }
@@ -194,23 +213,15 @@ namespace TreeViewFileExplorer.ShellClasses
 
         private void ExploreFiles()
         {
-            if (Drive?.IsReady != false)
+            var info = (DirectoryInfo)FileSystemInfo;
+            var files = info.GetFiles();
+            
+            foreach (var file in files.OrderBy(d => d.Name))
             {
-                if (FileSystemInfo is DirectoryInfo info)
+                if (!file.Attributes.HasFlag(FileAttributes.System) &&
+                    !file.Attributes.HasFlag(FileAttributes.Hidden))
                 {
-                    try
-                    {
-                        var files = info.EnumerateFiles().OrderBy(d => d.Name);
-
-                        foreach (var file in files)
-                        {
-                            if (!file.Attributes.HasFlag(FileAttributes.System | FileAttributes.Hidden))
-                            {
-                                Children.Add(new FileSystemObjectInfo(file));
-                            }
-                        }
-                    }
-                    catch { } //UnauthorizedAccessException!
+                    Children.Add(new FileSystemObjectInfo(file));
                 }
             }
         }

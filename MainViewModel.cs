@@ -29,7 +29,7 @@ using WhoCan.Models;
 
 namespace WhoCan
 {
-    public class MainViewModel : BaseObject
+    public class MainViewModel : Models.BaseObject
     {
         private const string CommonNT = @"BANK\";
         private const string CommonOU = ",OU=БАНК";

@@ -19,14 +19,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace WhoCan.Models
+namespace TreeViewFileExplorer.ShellClasses
 {
     [Serializable]
-    public abstract class BaseObject : INotifyPropertyChanged
+    public abstract class BaseFileSystemObjectInfo : INotifyPropertyChanged
     {
         private readonly IDictionary<string, object> _values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-        protected BaseObject()
+        protected BaseFileSystemObjectInfo()
             : base() { }
 
         [field: NonSerialized]
