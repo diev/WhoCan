@@ -174,6 +174,7 @@ namespace WhoCan
                             flags.ToString(),
                             comment,
                             group,
+                            rule.IsInherited,
                             danger)
                         );
                     }
@@ -186,6 +187,7 @@ namespace WhoCan
                             flags.ToString(),
                             comment,
                             group,
+                            rule.IsInherited,
                             danger)
                         );
                     }

@@ -19,7 +19,7 @@ namespace WhoCan.Models
 {
     public class RuleInfo : BaseObject
     {
-        public RuleInfo(string principalName, bool domain, bool deny, string flags, string comment, bool group, bool danger)
+        public RuleInfo(string principalName, bool domain, bool deny, string flags, string comment, bool group, bool inherited, bool danger)
         {
             PrincipalName = principalName;
             Domain = domain;
@@ -27,6 +27,7 @@ namespace WhoCan.Models
             Flags = flags;
             Comment = comment;
             IsGroup = group;
+            IsInherited = inherited;
             IsDanger = danger;
             IsSelected = false;
         }
@@ -37,6 +38,7 @@ namespace WhoCan.Models
         public string Flags { get; set; }
         public string Comment { get; set; }
         public bool IsGroup { get; set; }
+        public bool IsInherited { get; set; }
         public bool IsDanger { get; set; }
         public bool IsSelected { get; set; }
     }

@@ -78,6 +78,9 @@
                         <DataTrigger Binding="{Binding IsGroup}" Value="false">
                             <Setter Property="FontWeight" Value="Bold" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding IsInherited}" Value="true">
+                            <Setter Property="FontStyle" Value="Italic" />
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding IsDanger}" Value="true">
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
