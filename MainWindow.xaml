@@ -111,7 +111,7 @@
         
         <controls:SortableListView x:Name="GroupsControl" Grid.Row="2" Grid.Column="2" 
                                    ItemsSource="{Binding GroupInfos}" 
-                                   SelectionMode="Single" ToolTip="Группы пользователя">
+                                   SelectionMode="Single" ToolTip="Группы пользователя" SelectionChanged="GroupsControl_SelectionChanged">
             <controls:SortableListView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />

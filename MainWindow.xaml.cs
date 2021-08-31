@@ -134,11 +134,15 @@ namespace WhoCan
 
                 PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
                 var principal = Principal.FindByIdentity(principalContext, owner);
-                string name = principal.DisplayName;
 
-                if (name.Length > 0)
+                if (principal != null)
                 {
-                    owner += $" ({name})";
+                    string name = principal.DisplayName;
+
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        owner += $" ({name})";
+                    }
                 }
             }
             catch { }
@@ -176,12 +180,56 @@ namespace WhoCan
         {
             Cursor = Cursors.Wait;
 
+            //Users
             UsersControl.ItemsSource = null;
             UsersControl.Items.Clear();
 
             var context = (MainViewModel)DataContext;
             UsersControl.ItemsSource = context.GetUserInfos();
             UsersControl.UpdateLayout();
+
+            //SubGroups
+            if (RulesControl.SelectedItem != null)
+            {
+                GroupsControl.ItemsSource = null;
+                GroupsControl.Items.Clear();
+
+                try
+                {
+                    string groupName = (RulesControl.SelectedItem as RuleInfo).PrincipalName;
+
+                    if (groupName != null)
+                    {
+                        GroupsControl.ItemsSource = context.GetSubGroupInfos(groupName);
+                    }
+                }
+                catch { }
+
+                GroupsControl.UpdateLayout();
+            }
+
+            Cursor = Cursors.Arrow;
+        }
+
+
+        private void GroupsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Cursor = Cursors.Wait;
+
+            if (GroupsControl.SelectedItem != null)
+            {
+                UsersControl.ItemsSource = null;
+                UsersControl.Items.Clear();
+
+                try
+                {
+                    string groupName = (GroupsControl.SelectedItem as GroupInfo).GroupName;
+                    var context = (MainViewModel)DataContext;
+                    UsersControl.ItemsSource = context.GetUserInfos(groupName);
+                    UsersControl.UpdateLayout();
+                }
+                catch { }
+            }
 
             Cursor = Cursors.Arrow;
         }
@@ -195,7 +243,7 @@ namespace WhoCan
 
             try
             {
-                UserInfo item = (Models.UserInfo)UsersControl.SelectedItem;
+                UserInfo item = (UserInfo)UsersControl.SelectedItem;
 
                 if (item != null)
                 {

@@ -29,7 +29,7 @@ using WhoCan.Models;
 
 namespace WhoCan
 {
-    public class MainViewModel : Models.BaseObject
+    public class MainViewModel : BaseObject
     {
         private const string CommonNT = @"BANK\";
         private const string CommonOU = ",OU=БАНК";
@@ -198,7 +198,7 @@ namespace WhoCan
             return RuleInfos;
         }
 
-        public ObservableCollection<UserInfo> GetUserInfos()
+        public ObservableCollection<UserInfo> GetUserInfos(string groupName = null)
         {
             UserInfos.Clear();
 
@@ -207,12 +207,20 @@ namespace WhoCan
 
             if (principalContext != null)
             {
-                foreach (var ruleInfo in RuleInfos)
+                if (groupName == null)
                 {
-                    if (ruleInfo.IsSelected)
+                    foreach (var ruleInfo in RuleInfos)
                     {
-                        AddUser(principalContext, ruleInfo);
+                        if (ruleInfo.IsSelected)
+                        {
+                            AddUser(principalContext, ruleInfo);
+                        }
                     }
+                }
+                else
+                {
+                    var ruleInfo = new RuleInfo(groupName);
+                    AddUser(principalContext, ruleInfo);
                 }
             }
             else
@@ -346,6 +354,44 @@ namespace WhoCan
             {
                 UserInfos.Add(userInfo);
             }
+        }
+
+        public ObservableCollection<GroupInfo> GetSubGroupInfos(string groupName)
+        {
+            GroupInfos.Clear();
+
+            // establish domain context
+            PrincipalContext principalContext = null;
+            try { principalContext = new PrincipalContext(ContextType.Domain); } catch { }
+
+            if (principalContext != null)
+            {
+                // find the group
+                var group = GroupPrincipal.FindByIdentity(principalContext, groupName);
+
+                // if found - grab its groups
+                if (group != null)
+                {
+                    PrincipalSearchResult<Principal> groups = group.GetMembers(); //recursive doesn't work - help required!
+
+                    // iterate over all groups
+                    foreach (Principal p in groups)
+                    {
+                        // make sure to add only group principals
+                        if (p is GroupPrincipal)
+                        {
+                            var groupInfo = new GroupInfo(
+                                p.Name,
+                                p.Description
+                            );
+
+                            GroupInfos.Add(groupInfo);
+                        }
+                    }
+                }
+            }
+
+            return GroupInfos;
         }
 
         public ObservableCollection<GroupInfo> GetGroupInfos(string userName)

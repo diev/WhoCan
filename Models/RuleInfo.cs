@@ -32,6 +32,19 @@ namespace WhoCan.Models
             IsSelected = false;
         }
 
+        public RuleInfo(string groupName)
+        {
+            PrincipalName = groupName;
+            Domain = true;
+            Deny = false;
+            Flags = string.Empty;
+            Comment = string.Empty;
+            IsGroup = true;
+            IsInherited = false;
+            IsDanger = false;
+            IsSelected = false;
+        }
+
         public string PrincipalName { get; set; }
         public bool Domain { get; set; }
         public bool Deny { get; set; }
