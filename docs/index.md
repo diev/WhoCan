@@ -4,7 +4,7 @@
 [![GitHub Release]][releases]
 
 Кто может изменить файлы?
-Программа проверки сетевых прав.
+Программа проверки сетевых прав и экспорта списков в Excel.
 
 ![Рабочее окно приложения]
 
@@ -12,8 +12,8 @@
 
 ![Icon]
 
-Artist: [Oxygen Team]
-License: [GNU Lesser General Public License]
+Artist: [Oxygen Team]  
+License: [GNU Lesser General Public License]  
 Commercial usage: Allowed
 
 ## License
