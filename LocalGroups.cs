@@ -14,7 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------------
 // (c) https://stackoverflow.com/questions/33923951/how-to-get-a-list-of-local-machine-groups-users-when-machine-is-not-in-active
-#endregion
+//------------------------------------------------------------------------------
+#endregion License
 
 using System;
 using System.Collections.Generic;
@@ -32,17 +33,18 @@ namespace WhoCan
 
             try
             {
-                UInt32 entriesRead = 0;
-                UInt32 totalEntries = 0;
+                uint entriesRead = 0;
+                uint totalEntries = 0;
 
-                var result = NativeMethods.NetUserEnum(null, 0, 0, ref buffer, UInt32.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
+                var result = NativeMethods.NetUserEnum(null, 0, 0, ref buffer, uint.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
+
                 if (result != 0)
                 {
-                    throw new Win32Exception((Int32)result);
+                    throw new Win32Exception((int)result);
                 }
 
                 var userNames = Enumerable
-                    .Range(0, (Int32)entriesRead)
+                    .Range(0, (int)entriesRead)
                     .Select(i => {
                         var userInfo = Marshal.ReadIntPtr(buffer, i * IntPtr.Size);
                         var userName = Marshal.PtrToStringAuto(userInfo);
@@ -65,17 +67,18 @@ namespace WhoCan
 
             try
             {
-                UInt32 entriesRead = 0;
-                UInt32 totalEntries = 0;
+                uint entriesRead = 0;
+                uint totalEntries = 0;
 
-                var result = NativeMethods.NetLocalGroupEnum(null, 0, ref buffer, UInt32.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
+                var result = NativeMethods.NetLocalGroupEnum(null, 0, ref buffer, uint.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
+
                 if (result != 0)
                 {
-                    throw new Win32Exception((Int32)result);
+                    throw new Win32Exception((int)result);
                 }
 
                 var localGroupNames = Enumerable
-                    .Range(0, (Int32)entriesRead)
+                    .Range(0, (int)entriesRead)
                     .Select(i => {
                         var localGroupInfo = Marshal.ReadIntPtr(buffer, i * IntPtr.Size);
                         var groupName = Marshal.PtrToStringAuto(localGroupInfo);
@@ -98,17 +101,18 @@ namespace WhoCan
 
             try
             {
-                UInt32 entriesRead = 0;
-                UInt32 totalEntries = 0;
+                uint entriesRead = 0;
+                uint totalEntries = 0;
 
-                var result = NativeMethods.NetLocalGroupGetMembers(null, localGroupName, 3, ref buffer, UInt32.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
+                var result = NativeMethods.NetLocalGroupGetMembers(null, localGroupName, 3, ref buffer, uint.MaxValue, ref entriesRead, ref totalEntries, IntPtr.Zero);
+
                 if (result != 0)
                 {
-                    throw new Win32Exception((Int32)result);
+                    throw new Win32Exception((int)result);
                 }
 
                 var userNames = Enumerable
-                    .Range(0, (Int32)entriesRead)
+                    .Range(0, (int)entriesRead)
                     .Select(i => {
                         var membersInfo = Marshal.ReadIntPtr(buffer, i * IntPtr.Size);
                         var userName = Marshal.PtrToStringAuto(membersInfo);

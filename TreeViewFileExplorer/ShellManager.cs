@@ -14,7 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------------
 // (c) https://github.com/mikependon/Tutorials/tree/master/WPF/TreeViewFileExplorer
-#endregion
+//------------------------------------------------------------------------------
+#endregion License
 
 using System;
 using System.Drawing;
@@ -65,7 +66,7 @@ namespace TreeViewFileExplorer
             }
             finally
             {
-                Interop.DestroyIcon(fileInfo.hIcon);
+                _ = Interop.DestroyIcon(fileInfo.hIcon);
             }
         }
     }

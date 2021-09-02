@@ -8,6 +8,14 @@
 
 ![Рабочее окно приложения]
 
+## Used Icons
+
+![Icon]
+
+Artist: [Oxygen Team]
+License: [GNU Lesser General Public License]
+Commercial usage: Allowed
+
 ## License
 
 Licensed under the [Apache License, Version 2.0].
@@ -21,3 +29,7 @@ Licensed under the [Apache License, Version 2.0].
 [GitHub Release]: https://img.shields.io/github/release/diev/WhoCan.svg
 
 [Рабочее окно приложения]: assets/images/whocan.png
+[Icon]: assets/images/Apps-preferences-desktop-user-password-icon.png
+
+[Oxygen Team]: https://iconarchive.com/artist/oxygen-icons.org.html
+[GNU Lesser General Public License]: https://www.gnu.org/licenses/lgpl-3.0.html

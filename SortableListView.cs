@@ -14,7 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------------
 // (c) http://www.thejoyofcode.com/Sortable_ListView_in_WPF.aspx
-#endregion
+//------------------------------------------------------------------------------
+#endregion License
 
 using System.ComponentModel;
 using System.Windows;
@@ -54,14 +55,9 @@ namespace WhoCan
 
             if (e.OriginalSource is GridViewColumnHeader headerClicked && headerClicked.Role != GridViewColumnHeaderRole.Padding)
             {
-                if (headerClicked != _lastHeaderClicked || _lastDirection != ListSortDirection.Ascending)
-                {
-                    direction = ListSortDirection.Ascending;
-                }
-                else
-                {
-                    direction = ListSortDirection.Descending;
-                }
+                direction = headerClicked != _lastHeaderClicked || _lastDirection != ListSortDirection.Ascending
+                    ? ListSortDirection.Ascending
+                    : ListSortDirection.Descending;
 
                 // see if we have an attached SortPropertyName value
                 string sortBy = GetSortPropertyName(headerClicked.Column);

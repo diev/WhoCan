@@ -13,48 +13,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------------
-#endregion
+#endregion License
 
 using System;
 using System.Runtime.InteropServices;
 
 namespace WhoCan
 {
-    static class NativeMethods
+    internal static class NativeMethods
     {
         [DllImport("netapi32.dll")]
         public static extern void NetApiBufferFree(IntPtr bufptr);
 
         [DllImport("netapi32.dll")]
-        public static extern UInt32 NetUserEnum(
-            [MarshalAs(UnmanagedType.LPWStr)] String servername, 
-            UInt32 level, 
-            UInt32 filter, 
-            ref IntPtr bufptr, 
-            UInt32 prefmaxlen, 
-            ref UInt32 entriesread, 
-            ref UInt32 totalentries, 
+        public static extern uint NetUserEnum(
+            [MarshalAs(UnmanagedType.LPWStr)] string servername,
+            uint level,
+            uint filter,
+            ref IntPtr bufptr,
+            uint prefmaxlen,
+            ref uint entriesread,
+            ref uint totalentries,
             IntPtr resumehandle);
 
         [DllImport("netapi32.dll")]
-        public static extern UInt32 NetLocalGroupEnum(
-            [MarshalAs(UnmanagedType.LPWStr)] String servername, 
-            UInt32 level, 
-            ref IntPtr bufptr, 
-            UInt32 prefmaxlen, 
-            ref UInt32 entriesread, 
-            ref UInt32 totalentries, 
+        public static extern uint NetLocalGroupEnum(
+            [MarshalAs(UnmanagedType.LPWStr)] string servername,
+            uint level,
+            ref IntPtr bufptr,
+            uint prefmaxlen,
+            ref uint entriesread,
+            ref uint totalentries,
             IntPtr resumehandle);
 
         [DllImport("netapi32.dll")]
-        public extern static UInt32 NetLocalGroupGetMembers(
-            [MarshalAs(UnmanagedType.LPWStr)] String servername, 
-            [MarshalAs(UnmanagedType.LPWStr)] String localgroupname, 
-            UInt32 level, 
-            ref IntPtr bufptr, 
-            UInt32 prefmaxlen, 
-            ref UInt32 entriesread, 
-            ref UInt32 totalentries, 
+        public extern static uint NetLocalGroupGetMembers(
+            [MarshalAs(UnmanagedType.LPWStr)] string servername,
+            [MarshalAs(UnmanagedType.LPWStr)] string localgroupname,
+            uint level,
+            ref IntPtr bufptr,
+            uint prefmaxlen,
+            ref uint entriesread,
+            ref uint totalentries,
             IntPtr resumehandle);
     }
 }

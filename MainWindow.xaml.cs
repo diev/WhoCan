@@ -13,14 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------------
-#endregion
+#endregion License
 
 using System;
-using System.DirectoryServices.AccountManagement;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,12 +36,13 @@ namespace WhoCan
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string PreSelectPath = ""; //@"C:\Program Files\7-Zip\Lang"; // @"G:\"; //TODO
+        private string _preSelectPath = ""; //@"C:\Program Files\7-Zip\Lang"; // @"G:\"; //TODO
 
         public MainWindow()
         {
             InitializeComponent();
             InitializeFileSystemObjects();
+            DataContext = new MainViewModel();
 
             Title = $"{App.Title} v{App.Version.ToString(3)}";
         }
@@ -52,23 +51,17 @@ namespace WhoCan
         {
             Cursor = Cursors.Wait;
 
-            PreSelectPath = FoldersControl.SelectedValuePath;
+            var context = (MainViewModel)DataContext;
+
+            _preSelectPath = context.SelectedFileSystemInfo.FullName;
             FoldersControl.Items.Clear();
             InitializeFileSystemObjects();
 
-            //var context = (MainViewModel)DataContext;
+            context.SetPathSelected();
 
-            RulesControl.ItemsSource = null;
-            //RulesControl.Items.Clear();
-            //RulesControl.UpdateLayout();
-
-            UsersControl.ItemsSource = null;
-            //UsersControl.Items.Clear();
-            //UsersControl.UpdateLayout();
-
-            GroupsControl.ItemsSource = null;
-            //GroupsControl.Items.Clear();
-            //GroupsControl.UpdateLayout();
+            RulesControl.UpdateLayout();
+            UsersControl.UpdateLayout();
+            GroupsControl.UpdateLayout();
 
             Cursor = Cursors.Arrow;
         }
@@ -81,15 +74,17 @@ namespace WhoCan
                 .ForEach(drive =>
                 {
                     var fileSystemObject = new FileSystemObjectInfo(drive);
+
                     fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
                     fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
-                    FoldersControl.Items.Add(fileSystemObject);
+
+                    _ = FoldersControl.Items.Add(fileSystemObject);
                 });
 
             //PreSelect(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
-            if (!string.IsNullOrEmpty(PreSelectPath))
+            if (!string.IsNullOrEmpty(_preSelectPath))
             {
-                ViewManager.PreSelect(FoldersControl, PreSelectPath);
+                ViewManager.PreSelect(FoldersControl, _preSelectPath);
             }
         }
 
@@ -105,131 +100,55 @@ namespace WhoCan
             Cursor = Cursors.Wait;
         }
 
-        #endregion
+        #endregion Events
+
+        #region Selected
 
         private void FoldersControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             var item = (FileSystemObjectInfo)e.NewValue;
-            if (item == null) return;
 
-            Cursor = Cursors.Wait;
-
-            var info = item.FileSystemInfo;
-            string path = info.FullName;
-            FoldersControl.SelectedValuePath = path;
-            string owner = string.Empty;
-
-            try
+            if (item != null)
             {
-                if (info is DirectoryInfo)
-                {
-                    DirectorySecurity security = Directory.GetAccessControl(path);
-                    owner = security.GetOwner(typeof(NTAccount)).ToString();
-                }
-                else // if (info is FileInfo)
-                {
-                    FileSecurity security = File.GetAccessControl(path);
-                    owner = security.GetOwner(typeof(NTAccount)).ToString();
-                }
+                Cursor = Cursors.Wait;
 
-                PrincipalContext principalContext = new PrincipalContext(ContextType.Domain);
-                var principal = Principal.FindByIdentity(principalContext, owner);
+                var context = (MainViewModel)DataContext;
 
-                if (principal != null)
-                {
-                    string name = principal.DisplayName;
+                // binding manually
+                var info = item.FileSystemInfo;
+                //context.SelectedFileSystemInfo = info;
+                StatusLastWrite.Text = info.LastWriteTime.ToString("dd.MM.yy HH:mm");
+                StatusPath.Text = info.FullName;
+                StatusOwner.Text = context.GetOwner(info);
+                context.SetPathSelected(info);
 
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        owner += $" ({name})";
-                    }
-                }
+                RulesControl.UpdateLayout();
+                UsersControl.UpdateLayout();
+                GroupsControl.UpdateLayout();
+
+                Cursor = Cursors.Arrow;
             }
-            catch { }
-
-            Path.Text = path;
-            PathOwner.Text = owner;
-            LastWrite.Text = info.LastWriteTime.ToString();
-
-            RulesControl.ItemsSource = null;
-            RulesControl.Items.Clear();
-
-            var context = (MainViewModel)DataContext;
-            context.SelectedFileSystemObjectInfo = item;
-
-            RulesControl.ItemsSource = context.GetRuleInfos();
-            RulesControl.UpdateLayout();
-
-            UsersControl.ItemsSource = null;
-            UsersControl.Items.Clear();
-
-            //if (!lightest) //TODO: Add this Option
-            //{
-                UsersControl.ItemsSource = context.GetAllUserInfos();
-            //}
-            UsersControl.UpdateLayout();
-
-            GroupsControl.ItemsSource = null;
-            GroupsControl.Items.Clear();
-            GroupsControl.UpdateLayout();
-
-            Cursor = Cursors.Arrow;
         }
 
         private void RulesControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Cursor = Cursors.Wait;
 
-            //Users
-            UsersControl.ItemsSource = null;
-            UsersControl.Items.Clear();
-
             var context = (MainViewModel)DataContext;
-            UsersControl.ItemsSource = context.GetUserInfos();
+            context.SetRuleSelected();
             UsersControl.UpdateLayout();
-
-            //SubGroups
-            if (RulesControl.SelectedItem != null)
-            {
-                GroupsControl.ItemsSource = null;
-                GroupsControl.Items.Clear();
-
-                try
-                {
-                    string groupName = (RulesControl.SelectedItem as RuleInfo).PrincipalName;
-
-                    if (groupName != null)
-                    {
-                        GroupsControl.ItemsSource = context.GetSubGroupInfos(groupName);
-                    }
-                }
-                catch { }
-
-                GroupsControl.UpdateLayout();
-            }
+            GroupsControl.UpdateLayout();
 
             Cursor = Cursors.Arrow;
         }
-
 
         private void GroupsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Cursor = Cursors.Wait;
 
-            if (GroupsControl.SelectedItem != null)
-            {
-                UsersControl.ItemsSource = null;
-                UsersControl.Items.Clear();
-
-                try
-                {
-                    string groupName = (GroupsControl.SelectedItem as GroupInfo).GroupName;
-                    var context = (MainViewModel)DataContext;
-                    UsersControl.ItemsSource = context.GetUserInfos(groupName);
-                    UsersControl.UpdateLayout();
-                }
-                catch { }
-            }
+            var context = (MainViewModel)DataContext;
+            context.SetGroupSelected();
+            UsersControl.UpdateLayout();
 
             Cursor = Cursors.Arrow;
         }
@@ -238,24 +157,16 @@ namespace WhoCan
         {
             Cursor = Cursors.Wait;
 
-            GroupsControl.ItemsSource = null;
-            GroupsControl.Items.Clear();
-
-            try
-            {
-                UserInfo item = (UserInfo)UsersControl.SelectedItem;
-
-                if (item != null)
-                {
-                    var context = (MainViewModel)DataContext;
-                    GroupsControl.ItemsSource = context.GetGroupInfos(item.UserName);
-                }
-            }
-            catch { }
-
+            var context = (MainViewModel)DataContext;
+            context.SetUserSelected();
             GroupsControl.UpdateLayout();
+
             Cursor = Cursors.Arrow;
         }
+
+        #endregion Selected
+
+        #region Commands
 
         private void Copy_Executed(object sender, ExecutedRoutedEventArgs e)
         {
@@ -263,7 +174,7 @@ namespace WhoCan
             var result = new StringBuilder();
             char tab = '\t';
 
-            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(StatusPath))
             {
                 if (path.Contains(" "))
                 {
@@ -272,105 +183,97 @@ namespace WhoCan
 
                 Clipboard.SetText(path);
                 e.Handled = true;
-
-                return;
             }
-
-            if (e.Source.Equals(RulesControl))
+            else if (e.Source.Equals(RulesControl))
             {
-                result.Append("Ресурс").Append(tab);
-                result.Append("Тип").Append(tab);
-                result.Append("Аккаунт").Append(tab);
-                result.Append("Права").Append(tab);
-                result.AppendLine("Подробнее");
+                _ = result
+                    .Append("Ресурс").Append(tab)
+                    .Append("Тип").Append(tab)
+                    .Append("Аккаунт").Append(tab)
+                    .Append("Права").Append(tab)
+                    .AppendLine("Подробнее");
 
                 foreach (RuleInfo item in RulesControl.Items)
                 {
-                    result.Append(path).Append(tab);
-                    result.Append(item.IsGroup ? "Группа" : "Пользователь").Append(tab);
-                    result.Append(item.PrincipalName).Append(tab);
-                    result.Append(item.Flags).Append(tab);
-                    result.AppendLine(item.Comment);
+                    _ = result
+                        .Append(path).Append(tab)
+                        .Append(item.IsGroup ? "Группа" : "Пользователь").Append(tab)
+                        .Append(item.PrincipalName).Append(tab)
+                        .Append(item.Flags).Append(tab)
+                        .AppendLine(item.Comment);
                 }
 
                 Clipboard.SetText(result.ToString());
                 e.Handled = true;
-
-                return;
             }
-
-            if (e.Source.Equals(UsersControl))
+            else if (e.Source.Equals(UsersControl))
             {
-                result.Append("Ресурс").Append(tab);
-                result.Append("Логин").Append(tab);
-                result.Append("Права").Append(tab);
-                result.Append("Имя").Append(tab);
-                result.Append("Фамилия").Append(tab);
-                result.Append("Имя Фамилия").Append(tab);
-                result.AppendLine("Подробнее");
+                _ = result
+                    .Append("Ресурс").Append(tab)
+                    .Append("Логин").Append(tab)
+                    .Append("Права").Append(tab)
+                    .Append("Имя").Append(tab)
+                    .Append("Фамилия").Append(tab)
+                    .Append("Имя Фамилия").Append(tab)
+                    .AppendLine("Подробнее");
 
                 foreach (UserInfo item in UsersControl.Items)
                 {
                     //if (item.Enabled)
                     {
-                        result.Append(path).Append(tab);
-                        result.Append(item.UserName).Append(tab);
-                        result.Append(item.IsDanger ? "RW" : "R").Append(tab);
-                        result.Append(item.Name).Append(tab);
-                        result.Append(item.Family).Append(tab);
-                        result.Append(item.DisplayName).Append(tab);
-                        result.AppendLine(item.Comment);
+                        _ = result
+                            .Append(path).Append(tab)
+                            .Append(item.UserName).Append(tab)
+                            .Append(item.IsDanger ? "RW" : "R").Append(tab)
+                            .Append(item.Name).Append(tab)
+                            .Append(item.Family).Append(tab)
+                            .Append(item.DisplayName).Append(tab)
+                            .AppendLine(item.Comment);
                     }
                 }
 
                 Clipboard.SetText(result.ToString());
                 e.Handled = true;
-
-                return;
             }
-
-            if (e.Source.Equals(GroupsControl))
+            else if (e.Source.Equals(GroupsControl))
             {
                 UserInfo userInfo = (UserInfo)UsersControl.SelectedItem;
 
-                result.Append("Пользователь").Append(tab);
-                result.Append("Имя Фамилия").Append(tab);
-                result.Append("Группа").Append(tab);
-                result.AppendLine("Подробнее");
+                _ = result
+                    .Append("Пользователь").Append(tab)
+                    .Append("Имя Фамилия").Append(tab)
+                    .Append("Группа").Append(tab)
+                    .AppendLine("Подробнее");
 
                 foreach (GroupInfo item in GroupsControl.Items)
                 {
-                    result.Append(userInfo.UserName).Append(tab);
-                    result.Append(userInfo.DisplayName).Append(tab);
-                    result.Append(item.GroupName).Append(tab);
-                    result.AppendLine(item.Description);
+                    _ = result
+                        .Append(userInfo.UserName).Append(tab)
+                        .Append(userInfo.DisplayName).Append(tab)
+                        .Append(item.GroupName).Append(tab)
+                        .AppendLine(item.Description);
                 }
 
                 Clipboard.SetText(result.ToString());
                 e.Handled = true;
-
-                return;
             }
         }
 
         private void Copy_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(StatusPath))
             {
                 e.CanExecute = FoldersControl.SelectedItem != null;
             }
-
-            if (e.Source.Equals(RulesControl))
+            else if (e.Source.Equals(RulesControl))
             {
                 e.CanExecute = RulesControl.HasItems;
             }
-
-            if (e.Source.Equals(UsersControl))
+            else if (e.Source.Equals(UsersControl))
             {
                 e.CanExecute = UsersControl.HasItems;
             }
-
-            if (e.Source.Equals(GroupsControl))
+            else if (e.Source.Equals(GroupsControl))
             {
                 e.CanExecute = GroupsControl.HasItems;
             }
@@ -378,19 +281,17 @@ namespace WhoCan
 
         private void Paste_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(StatusPath))
             {
                 var path = Clipboard.GetText();
                 ViewManager.PreSelect(FoldersControl, path);
                 e.Handled = true;
-
-                return;
             }
         }
 
         private void Paste_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            if (e.Source.Equals(FoldersControl) || e.Source.Equals(Path))
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(StatusPath))
             {
                 var path = Clipboard.GetText();
 
@@ -403,9 +304,34 @@ namespace WhoCan
             }
         }
 
+        private void Open_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(StatusPath))
+            {
+                var item = (FileSystemObjectInfo)FoldersControl.SelectedItem;
+                var path = item.FileSystemInfo.FullName;
+                _ = Process.Start(path);
+                e.Handled = true;
+            }
+        }
+
+        private void Open_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (e.Source.Equals(FoldersControl) || e.Source.Equals(StatusPath))
+            {
+                e.CanExecute = FoldersControl.SelectedItem != null;
+            }
+        }
+
+        #endregion Commands
+
+        #region Menu
+
         private void MenuRefresh_Click(object sender, RoutedEventArgs e)
         {
             Refresh();
         }
+
+        #endregion Menu
     }
 }

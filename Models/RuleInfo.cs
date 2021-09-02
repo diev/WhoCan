@@ -13,43 +13,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------------
-#endregion
+#endregion License
+
+using System.DirectoryServices.AccountManagement;
 
 namespace WhoCan.Models
 {
     public class RuleInfo : BaseObject
     {
-        public RuleInfo(string principalName, bool domain, bool deny, string flags, string comment, bool group, bool inherited, bool danger)
-        {
-            PrincipalName = principalName;
-            Domain = domain;
-            Deny = deny;
-            Flags = flags;
-            Comment = comment;
-            IsGroup = group;
-            IsInherited = inherited;
-            IsDanger = danger;
-            IsSelected = false;
-        }
-
-        public RuleInfo(string groupName)
-        {
-            PrincipalName = groupName;
-            Domain = true;
-            Deny = false;
-            Flags = string.Empty;
-            Comment = string.Empty;
-            IsGroup = true;
-            IsInherited = false;
-            IsDanger = false;
-            IsSelected = false;
-        }
+        public Principal Principal { get; set; }
 
         public string PrincipalName { get; set; }
-        public bool Domain { get; set; }
-        public bool Deny { get; set; }
         public string Flags { get; set; }
         public string Comment { get; set; }
+
+        public bool Domain { get; set; }
+        public bool Deny { get; set; }
         public bool IsGroup { get; set; }
         public bool IsInherited { get; set; }
         public bool IsDanger { get; set; }

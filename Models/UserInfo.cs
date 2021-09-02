@@ -13,33 +13,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------------
-#endregion
+#endregion License
 
 using System;
 using System.Collections.Generic;
+using System.DirectoryServices.AccountManagement;
 
 namespace WhoCan.Models
 {
     public class UserInfo : BaseObject, IEquatable<UserInfo>
     {
-        public UserInfo(string userName, bool enabled, string displayName, string name, string family, string comment, bool danger)
-        {
-            UserName = userName;
-            Enabled = enabled;
-            DisplayName = displayName;
-            Name = name;
-            Family = family;
-            Comment = comment;
-            IsDanger = danger;
-        }
+        public UserPrincipal UserPrincipal { get; set; }
 
         public string UserName { get; set; }
-        public bool Enabled { get; set; }
         public string DisplayName { get; set; }
         public string Name { get; set; }
         public string Family { get; set; }
         public string Comment { get; set; }
+
+        public bool Enabled { get; set; }
         public bool IsDanger { get; set; }
+        public bool IsSelected { get; set; }
 
         public override bool Equals(object obj)
         {

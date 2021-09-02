@@ -15,7 +15,8 @@
 //------------------------------------------------------------------------------
 // (c) https://github.com/mikependon/Tutorials/tree/master/WPF/TreeViewFileExplorer
 // (c) https://medium.com/@mikependon/designing-a-wpf-treeview-file-explorer-565a3f13f6f2
-#endregion
+//------------------------------------------------------------------------------
+#endregion License
 
 using System;
 using System.Collections.ObjectModel;
@@ -83,7 +84,7 @@ namespace TreeViewFileExplorer.ShellClasses
             AfterExplore?.Invoke(this, EventArgs.Empty);
         }
 
-        #endregion
+        #endregion Events
 
         #region EventHandlers
 
@@ -123,7 +124,7 @@ namespace TreeViewFileExplorer.ShellClasses
             }
         }
 
-        #endregion
+        #endregion EventHandlers
 
         #region Properties
 
@@ -157,7 +158,7 @@ namespace TreeViewFileExplorer.ShellClasses
             set => base.SetValue(nameof(Drive), value);
         }
 
-        #endregion
+        #endregion Properties
 
         #region Methods
 
@@ -226,6 +227,6 @@ namespace TreeViewFileExplorer.ShellClasses
             }
         }
 
-        #endregion
+        #endregion Methods
     }
 }

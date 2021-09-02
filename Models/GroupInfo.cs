@@ -13,23 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------------
-#endregion
+#endregion License
 
 using System;
 using System.Collections.Generic;
+using System.DirectoryServices.AccountManagement;
 
 namespace WhoCan.Models
 {
     public class GroupInfo : BaseObject, IEquatable<GroupInfo>
     {
-        public GroupInfo(string groupName, string description)
-        {
-            GroupName = groupName;
-            Description = description;
-        }
+        public GroupPrincipal GroupPrincipal { get; set; }
 
         public string GroupName { get; set; }
         public string Description { get; set; }
+
+        //public bool IsDanger { get; set; }
+        public bool IsSelected { get; set; }
 
         public override bool Equals(object obj)
         {

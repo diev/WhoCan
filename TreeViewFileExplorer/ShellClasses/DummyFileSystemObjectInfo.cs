@@ -14,7 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------------
 // (c) https://github.com/mikependon/Tutorials/tree/master/WPF/TreeViewFileExplorer
-#endregion
+//------------------------------------------------------------------------------
+#endregion License
 
 using System.IO;
 

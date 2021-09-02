@@ -14,7 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------------
 // (c) https://github.com/mikependon/Tutorials/tree/master/WPF/TreeViewFileExplorer
-#endregion
+//------------------------------------------------------------------------------
+#endregion License
 
 using System.IO;
 using System.Linq;
@@ -58,12 +59,17 @@ namespace TreeViewFileExplorer
 
                     childInfo.IsExpanded = true;
                     PreSelect(childInfo, path);
-                    if (_found) return;
+
+                    if (_found)
+                    {
+                        return;
+                    }
                 }
             }
         }
 
-        #endregion
+        #endregion Methods
+
         #region Helpers
 
         private static FileSystemObjectInfo GetDriveFileSystemObjectInfo(TreeView tree, string path)
@@ -90,6 +96,6 @@ namespace TreeViewFileExplorer
             return null;
         }
 
-        #endregion
+        #endregion Helpers
     }
 }

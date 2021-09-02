@@ -3,22 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:main="clr-namespace:WhoCan"
+        xmlns:local="clr-namespace:WhoCan"
         xmlns:tree="clr-namespace:TreeViewFileExplorer.ShellClasses"
         xmlns:controls="clr-namespace:WhoCan"
-        d:DataContext="{d:DesignInstance {x:Type main:MainViewModel}}"
+        d:DataContext="{d:DesignInstance {x:Type local:MainViewModel}}"
         mc:Ignorable="d"
         Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>
-        <main:MainViewModel/>
+        <local:MainViewModel/>
     </Window.DataContext>
     
     <Window.CommandBindings>
         <CommandBinding x:Name="Copy" Command="Copy" Executed="Copy_Executed" CanExecute="Copy_CanExecute" />
         <CommandBinding x:Name="Paste" Command="Paste" Executed="Paste_Executed" CanExecute="Paste_CanExecute" />
+        <CommandBinding x:Name="Open" Command="Open" Executed="Open_Executed" CanExecute="Open_CanExecute" />
     </Window.CommandBindings>
-    
+
     <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" MinHeight="100" />
@@ -35,11 +36,13 @@
         </Grid.ColumnDefinitions>
         
         <TreeView x:Name="FoldersControl" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
-                  SelectedItemChanged="FoldersControl_SelectedItemChanged" ToolTip="Выбор ресурса">
+                  SelectedItemChanged="FoldersControl_SelectedItemChanged">
             <TreeView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />
                     <MenuItem Command="ApplicationCommands.Paste" />
+                    <Separator/>
+                    <MenuItem Command="ApplicationCommands.Open" />
                     <Separator/>
                     <MenuItem Header="Обновить" Click="MenuRefresh_Click"/>
                 </ContextMenu>
@@ -66,7 +69,7 @@
 
         <controls:SortableListView x:Name="RulesControl" Grid.Row="0" Grid.Column="2" 
                                    ItemsSource="{Binding RuleInfos}" 
-                                   SelectionChanged="RulesControl_SelectionChanged" ToolTip="Права доступа">
+                                   SelectionChanged="RulesControl_SelectionChanged">
             <controls:SortableListView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />
@@ -81,11 +84,11 @@
                         <DataTrigger Binding="{Binding IsInherited}" Value="true">
                             <Setter Property="FontStyle" Value="Italic" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsDanger}" Value="true">
-                            <Setter Property="Foreground" Value="Red" />
-                        </DataTrigger>
                         <DataTrigger Binding="{Binding Domain}" Value="false">
                             <Setter Property="Foreground" Value="Gray" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsDanger}" Value="true">
+                            <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Deny}" Value="true">
                             <Setter Property="Foreground" Value="LightGray" />
@@ -110,13 +113,17 @@
                       HorizontalAlignment="Stretch" VerticalAlignment="Center" />
         
         <controls:SortableListView x:Name="GroupsControl" Grid.Row="2" Grid.Column="2" 
-                                   ItemsSource="{Binding GroupInfos}" 
-                                   SelectionMode="Single" ToolTip="Группы пользователя" SelectionChanged="GroupsControl_SelectionChanged">
+                                   ItemsSource="{Binding GroupInfos}" SelectionChanged="GroupsControl_SelectionChanged">
             <controls:SortableListView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />
                 </ContextMenu>
             </controls:SortableListView.ContextMenu>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                </Style>
+            </ListView.ItemContainerStyle>
             <controls:SortableListView.View>
                 <GridView>
                     <GridViewColumn Header="Группа" DisplayMemberBinding="{Binding GroupName}" Width="Auto" 
@@ -133,7 +140,7 @@
         <controls:SortableListView x:Name="UsersControl" Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" 
                                    ItemsSource="{Binding UserInfos}" 
                                    SelectionChanged="UsersControl_SelectionChanged" 
-                                   SelectionMode="Single" ToolTip="Допущенные пользователи">
+                                   SelectionMode="Single">
             <controls:SortableListView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="ApplicationCommands.Copy" />
@@ -149,6 +156,7 @@
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
                     </Style.Triggers>
+                    <Setter Property="IsSelected" Value="{Binding IsSelected}" />
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.View>
@@ -178,21 +186,22 @@
                 </ItemsPanelTemplate>
             </StatusBar.ItemsPanel>
             
-            <StatusBarItem Grid.Column="0" ToolTip="Последняя запись">
-                <TextBlock x:Name="LastWrite" Text="Готово" />
+            <StatusBarItem Grid.Column="0">
+                <TextBlock x:Name="StatusLastWrite" Text="Готово" />
             </StatusBarItem>
-            <StatusBarItem Grid.Column="1" ToolTip="Ресурс">
-                <TextBlock x:Name="Path" TextWrapping="Wrap" >
+            <StatusBarItem Grid.Column="1">
+                <TextBlock x:Name="StatusPath" TextWrapping="Wrap" Text="Выберите папку" >
                     <TextBlock.ContextMenu>
                         <ContextMenu>
                             <MenuItem Command="ApplicationCommands.Copy" />
                             <MenuItem Command="ApplicationCommands.Paste" />
+                            <MenuItem Command="ApplicationCommands.Open" />
                         </ContextMenu>
                     </TextBlock.ContextMenu>
                 </TextBlock>
             </StatusBarItem>
-            <StatusBarItem Grid.Column="2" HorizontalContentAlignment="Center" ToolTip="Владелец">
-                <TextBlock x:Name="PathOwner" />
+            <StatusBarItem Grid.Column="2" HorizontalContentAlignment="Center">
+                <TextBlock x:Name="StatusOwner" Text="Владелец" />
             </StatusBarItem>
         </StatusBar>
     </Grid>
