@@ -179,27 +179,31 @@ namespace TreeViewFileExplorer.ShellClasses
 
         private void RemoveDummy()
         {
-            Children.Remove(GetDummy());
+            _ = Children.Remove(GetDummy());
         }
 
         private void ExploreDirectories()
         {
-            var info = (DirectoryInfo)FileSystemInfo;
-            var directories = info.GetDirectories();
-
-            foreach (var directory in directories.OrderBy(d => d.Name))
+            try
             {
-                if (!directory.Attributes.HasFlag(FileAttributes.System) &&
-                    !directory.Attributes.HasFlag(FileAttributes.Hidden))
-                {
-                    var fileSystemObject = new FileSystemObjectInfo(directory);
+                var info = (DirectoryInfo)FileSystemInfo;
+                var directories = info.GetDirectories();
 
-                    fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
-                    fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
-                    
-                    Children.Add(fileSystemObject);
+                foreach (var directory in directories.OrderBy(d => d.Name))
+                {
+                    if (!directory.Attributes.HasFlag(FileAttributes.System) &&
+                        !directory.Attributes.HasFlag(FileAttributes.Hidden))
+                    {
+                        var fileSystemObject = new FileSystemObjectInfo(directory);
+
+                        fileSystemObject.BeforeExplore += FileSystemObject_BeforeExplore;
+                        fileSystemObject.AfterExplore += FileSystemObject_AfterExplore;
+
+                        Children.Add(fileSystemObject);
+                    }
                 }
             }
+            catch { } // Network disconnected
         }
 
         private void FileSystemObject_AfterExplore(object sender, EventArgs e)
@@ -214,17 +218,21 @@ namespace TreeViewFileExplorer.ShellClasses
 
         private void ExploreFiles()
         {
-            var info = (DirectoryInfo)FileSystemInfo;
-            var files = info.GetFiles();
-            
-            foreach (var file in files.OrderBy(d => d.Name))
+            try
             {
-                if (!file.Attributes.HasFlag(FileAttributes.System) &&
-                    !file.Attributes.HasFlag(FileAttributes.Hidden))
+                var info = (DirectoryInfo)FileSystemInfo;
+                var files = info.GetFiles();
+
+                foreach (var file in files.OrderBy(d => d.Name))
                 {
-                    Children.Add(new FileSystemObjectInfo(file));
+                    if (!file.Attributes.HasFlag(FileAttributes.System) &&
+                        !file.Attributes.HasFlag(FileAttributes.Hidden))
+                    {
+                        Children.Add(new FileSystemObjectInfo(file));
+                    }
                 }
             }
+            catch { } // Network disconnected
         }
 
         #endregion Methods

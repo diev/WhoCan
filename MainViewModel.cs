@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Security.AccessControl;
@@ -30,19 +31,36 @@ namespace WhoCan
 {
     public class MainViewModel : BaseObject
     {
-        private const string _commonNT = @"BANK\";
-        private const string _commonOU = ",OU=БАНК";
-        private const string _commonDC = ",DC=bank,DC=cibank,DC=ru";
+        private readonly List<string> _skipUsers = new List<string> {
+            "admin",
+            "Administrator",
+            "Администратор"
+        };
 
-        private readonly List<string> _skipAdmins;
-        private readonly List<string> _skipGroups;
+        private readonly List<string> _skipGroups = new List<string> {
+            "admins",
+            "Administrators",
+            "Администраторы",
+            "Администраторы домена",
+            "Администраторы предприятия",
+            "Все",
+            "Высокий обязательный уровень",
+            "Данная организация",
+            "Подтвержденное службой удостоверение",
+            "Пользователи",
+            "Пользователи домена",
+            "Пользователи журналов производительности",
+            "Пользователи удаленного рабочего стола",
+            "Прошедшие проверку",
+            "Средний обязательный уровень"
+        };
 
         private const string _rightDeny = "x";
         private const string _rightFull = "F";
         private const string _rightRead = "R";
         private const string _rightWrite = "W";
+        private const string _rightTransit = "T";
 
-        private readonly PrincipalContext _domain = null;
         private bool _inAction = false;
 
         public ObservableCollection<RuleInfo> RuleInfos { get; protected set; } = new ObservableCollection<RuleInfo>();
@@ -53,34 +71,6 @@ namespace WhoCan
 
         public MainViewModel()
         {
-            try
-            {
-                _domain = new PrincipalContext(ContextType.Domain);
-
-                _skipAdmins = new List<string> {
-                    _commonNT + "admin",
-                    @"BUILTIN\Администраторы", @"BUILTIN\Administrators",
-                    @"NT AUTHORITY\СИСТЕМА", @"NT AUTHORITY\SYSTEM"
-                };
-
-                _skipGroups = new List<string> {
-                    "Все",
-                    "Высокий обязательный уровень",
-                    "Данная организация",
-                    "Подтвержденное службой удостоверение",
-                    "Пользователи",
-                    "Пользователи домена",
-                    "Пользователи удаленного рабочего стола",
-                    "Прошедшие проверку",
-                    "Средний обязательный уровень"
-                };
-            }
-            catch
-            {
-                _domain = new PrincipalContext(ContextType.Machine);
-                _skipAdmins = new List<string>();
-                _skipGroups = new List<string>();
-            }
         }
 
         #region Public methods
@@ -108,13 +98,14 @@ namespace WhoCan
             try
             {
                 AuthorizationRuleCollection rules;
+                bool container = info is DirectoryInfo;
 
-                if (info is DirectoryInfo)
+                if (container)
                 {
                     DirectorySecurity security = Directory.GetAccessControl(info.FullName);
                     rules = security.GetAccessRules(true, true, typeof(NTAccount));
                 }
-                else // if (info is FileInfo)
+                else
                 {
                     FileSecurity security = File.GetAccessControl(info.FullName);
                     rules = security.GetAccessRules(true, true, typeof(NTAccount));
@@ -122,22 +113,44 @@ namespace WhoCan
 
                 foreach (FileSystemAccessRule rule in rules)
                 {
-                    var name = rule.IdentityReference.Value;
+                    var identityValue = rule.IdentityReference.Value;
+                    var principal = Helpers.FindByIdentity(identityValue);
+                    bool isGroup = principal is GroupPrincipal; // principal.IsSecurityGroup?
 
-                    if (_skipAdmins.Contains(name))
+                    if (principal == null) // user "NT AUTHORITY\"
                     {
                         continue;
                     }
 
+                    string name = isGroup ? principal.Name : principal.SamAccountName;
+
+                    if (isGroup)
+                    {
+                        if (_skipGroups.Contains(name))
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (_skipUsers.Contains(name))
+                        {
+                            continue;
+                        }
+                    }
+
                     bool deny = rule.AccessControlType.HasFlag(AccessControlType.Deny);
                     bool danger = false;
+                    bool transit = false;
                     var flags = new StringBuilder();
 
                     if (deny)
                     {
                         _ = flags.Append(_rightDeny);
 
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Write | FileSystemRights.Delete))
+                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Write) ||
+                            rule.FileSystemRights.HasFlag(FileSystemRights.Delete) ||
+                            rule.FileSystemRights.HasFlag(FileSystemRights.DeleteSubdirectoriesAndFiles))
                         {
                             _ = flags.Append(_rightWrite);
                         }
@@ -152,35 +165,49 @@ namespace WhoCan
 
                         if (rule.FileSystemRights.HasFlag(FileSystemRights.ReadAndExecute))
                         {
-                            _ = flags.Append(_rightRead);
+                            if (container && rule.InheritanceFlags.Equals(InheritanceFlags.None))
+                            {
+                                transit = true;
+                                _ = flags.Append(_rightTransit);
+                            }
+                            else
+                            {
+                                _ = flags.Append(_rightRead);
+                            }
                         }
 
-                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify | FileSystemRights.Delete))
+                        if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify) ||
+                            rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
                         {
                             danger = true;
                             _ = flags.Append(_rightWrite);
                         }
                     }
 
-                    var principal = Principal.FindByIdentity(_domain, name); //TODO long!
-                    bool isGroup = principal is GroupPrincipal; // principal.IsSecurityGroup?
-
+                    string domain = Environment.UserDomainName;
+                   
                     var ruleInfo = new RuleInfo
                     {
-                        Comment = GetRightsEnum(rule),
+                        Comment = Helpers.GetRightsEnum(rule),
                         Deny = deny,
-                        Domain = name.StartsWith(_commonNT),
+                        Domain = identityValue.StartsWith(domain),
                         Flags = flags.ToString(),
                         IsDanger = danger,
                         IsGroup = isGroup,
                         IsInherited = rule.IsInherited,
                         IsSelected = false,
+                        IsTransit = transit,
                         Principal = principal,
-                        PrincipalName = name.Replace(_commonNT, string.Empty)
+                        PrincipalName = name,
+                        Rule = rule
                     };
 
                     RuleInfos.Add(ruleInfo);
-                    AddRuleUsers(ruleInfo);
+
+                    //if (principal != null) // continue above
+                    //{
+                        AddRuleUsers(ruleInfo);
+                    //}
 
                     if (isGroup)
                     {
@@ -191,185 +218,6 @@ namespace WhoCan
             catch { }
 
             _inAction = false;
-        }
-
-        private string GetRightsEnum(FileSystemAccessRule rule)
-        {
-            bool verbose = false;
-            var rights = new StringBuilder();
-
-            if (rule.AccessControlType.HasFlag(AccessControlType.Deny))
-            {
-                _ = rights.Append("Deny ");
-            }
-
-            //Specifies the right to append data to the end of a file.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.AppendData))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.AppendData));
-            }
-
-            //Specifies the right to change the security and audit rules associated with a file or folder.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ChangePermissions))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ChangePermissions));
-            }
-
-            //Specifies the right to create a folder This right requires the Synchronize value.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.CreateDirectories))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.CreateDirectories));
-            }
-
-            //Specifies the right to create a file. This right requires the Synchronize value.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.CreateFiles))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.CreateFiles));
-            }
-
-            //Specifies the right to delete a folder or file.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.Delete))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.Delete));
-            }
-
-            //Specifies the right to delete a folder and any files contained within that folder.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.DeleteSubdirectoriesAndFiles))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.DeleteSubdirectoriesAndFiles));
-            }
-
-            //Specifies the right to run an application file.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ExecuteFile))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ExecuteFile));
-            }
-
-            //Specifies the right to exert full control over a folder or file,
-            //and to modify access control and audit rules. This value represents the right
-            //to do anything with a file and is the combination of all rights in this enumeration.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.FullControl))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.FullControl));
-            }
-
-            //Specifies the right to read the contents of a directory.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.ListDirectory))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ListDirectory));
-            }
-
-            //Specifies the right to read, write, list folder contents,
-            //delete folders and files, and run application files.
-            //This right includes the ReadAndExecute right, the Write right, and the Delete right.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.Modify))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.Modify));
-            }
-
-            //Specifies the right to open and copy folders or files as read-only.
-            //This right includes the ReadData right, ReadExtendedAttributes right,
-            //ReadAttributes right, and ReadPermissions right.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.Read))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.Read));
-            }
-
-            //Specifies the right to open and copy folders or files as read-only,
-            //and to run application files. This right includes the Read right and the ExecuteFile right.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ReadAndExecute))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ReadAndExecute));
-            }
-
-            //Specifies the right to open and copy file system attributes from a folder or file.
-            //For example, this value specifies the right to view the file creation or modified date.
-            //This does not include the right to read data, extended file system attributes, or access and audit rules.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ReadAttributes))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ReadAttributes));
-            }
-
-            //Specifies the right to open and copy a file or folder.
-            //This does not include the right to read file system attributes,
-            //extended file system attributes, or access and audit rules.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ReadData))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ReadData));
-            }
-
-            //Specifies the right to open and copy extended file system attributes from a folder or file.
-            //For example, this value specifies the right to view author and content information.
-            //This does not include the right to read data, file system attributes, or access and audit rules.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ReadExtendedAttributes))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ReadExtendedAttributes));
-            }
-
-            //Specifies the right to open and copy access and audit rules from a folder or file.
-            //This does not include the right to read data, file system attributes,
-            //and extended file system attributes.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.ReadPermissions))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.ReadPermissions));
-            }
-
-            //Specifies whether the application can wait for a file handle to synchronize
-            //with the completion of an I/O operation.
-            //This value is automatically set when allowing access and automatically excluded when denying access.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.Synchronize))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.Synchronize));
-            }
-
-            //Specifies the right to change the owner of a folder or file.
-            //Note that owners of a resource have full access to that resource.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.TakeOwnership))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.TakeOwnership));
-            }
-
-            //Specifies the right to list the contents of a folder and to run applications contained within that folder.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.Traverse))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.Traverse));
-            }
-
-            //Specifies the right to create folders and files, and to add or remove data from files.
-            //This right includes the WriteData right, AppendData right, WriteExtendedAttributes right,
-            //and WriteAttributes right.
-            if (rule.FileSystemRights.HasFlag(FileSystemRights.Write))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.Write));
-            }
-
-            //Specifies the right to open and write file system attributes to a folder or file.
-            //This does not include the ability to write data, extended attributes, or access and audit rules.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.WriteAttributes))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.WriteAttributes));
-            }
-
-            //Specifies the right to open and write to a file or folder.
-            //This does not include the right to open and write file system attributes,
-            //extended file system attributes, or access and audit rules.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.WriteData))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.WriteData));
-            }
-
-            //Specifies the right to open and write extended file system attributes to a folder or file.
-            //This does not include the ability to write data, attributes, or access and audit rules.
-            if (verbose && rule.FileSystemRights.HasFlag(FileSystemRights.WriteExtendedAttributes))
-            {
-                _ = rights.AppendLine(nameof(FileSystemRights.WriteExtendedAttributes));
-            }
-
-            string comment = rights.ToString().Replace(Environment.NewLine, ", ").Trim();
-
-            return comment.EndsWith(",")
-                ? comment.Substring(0, comment.Length - 1)
-                : comment;
         }
 
         public void SetRuleSelected()
@@ -388,7 +236,10 @@ namespace WhoCan
             {
                 if (item.IsSelected)
                 {
-                    AddRuleUsers(item);
+                    if (item.Principal != null)
+                    {
+                        AddRuleUsers(item);
+                    }
 
                     if (item.IsGroup)
                     {
@@ -450,24 +301,21 @@ namespace WhoCan
 
         private void AddRuleUsers(RuleInfo item)
         {
-            if (item.Principal != null)
+            if (item.IsGroup)
             {
-                if (item.IsGroup)
-                {
-                    var members = ((GroupPrincipal)item.Principal).GetMembers(true);
+                var members = ((GroupPrincipal)item.Principal).GetMembers(true);
 
-                    foreach (Principal member in members)
+                foreach (Principal member in members)
+                {
+                    if (member is UserPrincipal user)
                     {
-                        if (member is UserPrincipal user)
-                        {
-                            AddRuleUser(item, user);
-                        }
+                        AddRuleUser(item, user);
                     }
                 }
-                else
-                {
-                    AddRuleUser(item, (UserPrincipal)item.Principal);
-                }
+            }
+            else
+            {
+                AddRuleUser(item, (UserPrincipal)item.Principal);
             }
         }
 
@@ -486,22 +334,15 @@ namespace WhoCan
 
         private void AddRuleUser(RuleInfo item, UserPrincipal user)
         {
-            string comment = user.DistinguishedName == null
-                ? string.Empty
-                : user.DistinguishedName // "CN=Name Surname,OU=Dept,OU=XXXX,DC=XXX,DC=XXXX,DC=XX" -> "Name Surname, Dept"
-                    .Replace("CN=", string.Empty)
-                    .Replace(_commonOU, string.Empty)
-                    .Replace(_commonDC, string.Empty)
-                    .Replace("OU=", " ");
-
             var userInfo = new UserInfo
             {
-                Comment = comment,
+                Comment = Helpers.DistinguishedName(user.DistinguishedName),
                 DisplayName = user.DisplayName,
                 Enabled = (bool)user.Enabled,
                 Family = user.Surname,
                 IsDanger = (bool)user.Enabled && item.IsDanger,
                 IsSelected = false,
+                IsTransit = item.IsTransit,
                 Name = user.GivenName,
                 UserName = user.SamAccountName,
                 UserPrincipal = user
@@ -509,9 +350,12 @@ namespace WhoCan
 
             int i = UserInfos.IndexOf(userInfo);
 
-            if (i < 0 && !item.Deny)
+            if (i < 0)
             {
-                UserInfos.Add(userInfo); 
+                if (!item.Deny)
+                {
+                    UserInfos.Add(userInfo);
+                }
             }
             else if (UserInfos[i].Enabled && !UserInfos[i].IsDanger && userInfo.IsDanger)
             {
@@ -521,17 +365,9 @@ namespace WhoCan
 
         private void AddGroupUser(GroupInfo item, UserPrincipal user)
         {
-            string comment = user.DistinguishedName == null
-                ? string.Empty
-                : user.DistinguishedName // "CN=Name Surname,OU=Dept,OU=XXXX,DC=XXX,DC=XXXX,DC=XX" -> "Name Surname, Dept"
-                    .Replace("CN=", string.Empty)
-                    .Replace(_commonOU, string.Empty)
-                    .Replace(_commonDC, string.Empty)
-                    .Replace("OU=", " ");
-
             var userInfo = new UserInfo
             {
-                Comment = comment,
+                Comment = Helpers.DistinguishedName(user.DistinguishedName),
                 DisplayName = user.DisplayName,
                 Enabled = (bool)user.Enabled,
                 Family = user.Surname,
@@ -586,12 +422,46 @@ namespace WhoCan
 
         private void AddNestedGroups(RuleInfo item)
         {
-            if (item.Principal != null)
-            {
-                var members = ((GroupPrincipal)item.Principal).GetMembers(true); //TODO recursive doesn't work - help required!
+            Trace.Assert(item.Principal != null, "No RuleInfo.Pricipal");
 
-                foreach (Principal member in members)
+            var members = ((GroupPrincipal)item.Principal).GetMembers(); //TODO recursive doesn't work - help required!
+
+            foreach (Principal member in members)
+            {
+                if (member is GroupPrincipal group)
                 {
+                    if (_skipGroups.Contains(group.Name))
+                    {
+                        continue;
+                    }
+
+                    var groupInfo = new GroupInfo
+                    {
+                        Description = group.Description ?? group.DisplayName ?? group.SamAccountName,
+                        GroupName = group.Name,
+                        GroupPrincipal = group,
+                        //IsDanger = item.IsDanger,
+                        IsSelected = false
+                    };
+
+                    if (!GroupInfos.Contains(groupInfo))
+                    {
+                        GroupInfos.Add(groupInfo);
+                    }
+                }
+            }
+        }
+
+        private void AddUserGroups(UserInfo item)
+        {
+            var groups = item.UserPrincipal.GetAuthorizationGroups();
+
+            if (groups != null)
+            {
+                // iterate over all groups
+                foreach (Principal member in groups)
+                {
+                    // make sure to add only group principals
                     if (member is GroupPrincipal group)
                     {
                         if (_skipGroups.Contains(group.Name))
@@ -608,45 +478,7 @@ namespace WhoCan
                             IsSelected = false
                         };
 
-                        if (!GroupInfos.Contains(groupInfo))
-                        {
-                            GroupInfos.Add(groupInfo);
-                        }
-                    }
-                }
-            }
-        }
-
-        private void AddUserGroups(UserInfo item)
-        {
-            //if (item.UserPrincipal != null)
-            {
-                var groups = item.UserPrincipal.GetAuthorizationGroups();
-
-                if (groups != null)
-                {
-                    // iterate over all groups
-                    foreach (Principal member in groups)
-                    {
-                        // make sure to add only group principals
-                        if (member is GroupPrincipal group)
-                        {
-                            if (_skipGroups.Contains(group.Name))
-                            {
-                                continue;
-                            }
-
-                            var groupInfo = new GroupInfo
-                            {
-                                Description = group.Description ?? group.DisplayName,
-                                GroupName = group.Name,
-                                GroupPrincipal = group,
-                                //IsDanger = item.IsDanger,
-                                IsSelected = false
-                            };
-
-                            GroupInfos.Add(groupInfo);
-                        }
+                        GroupInfos.Add(groupInfo);
                     }
                 }
             }
@@ -673,7 +505,7 @@ namespace WhoCan
                     owner = security.GetOwner(typeof(NTAccount)).ToString();
                 }
 
-                var principal = Principal.FindByIdentity(_domain, owner); // TODO long!
+                var principal = Helpers.FindByIdentity(owner);
 
                 if (principal != null)
                 {

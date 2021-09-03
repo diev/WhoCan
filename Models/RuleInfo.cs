@@ -16,11 +16,13 @@
 #endregion License
 
 using System.DirectoryServices.AccountManagement;
+using System.Security.AccessControl;
 
 namespace WhoCan.Models
 {
     public class RuleInfo : BaseObject
     {
+        public FileSystemAccessRule Rule { get; set; }
         public Principal Principal { get; set; }
 
         public string PrincipalName { get; set; }
@@ -32,6 +34,7 @@ namespace WhoCan.Models
         public bool IsGroup { get; set; }
         public bool IsInherited { get; set; }
         public bool IsDanger { get; set; }
+        public bool IsTransit { get; set; }
         public bool IsSelected { get; set; }
     }
 }

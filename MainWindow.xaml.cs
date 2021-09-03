@@ -117,10 +117,14 @@ namespace WhoCan
                 // binding manually
                 var info = item.FileSystemInfo;
                 //context.SelectedFileSystemInfo = info;
-                StatusLastWrite.Text = info.LastWriteTime.ToString("dd.MM.yy HH:mm");
-                StatusPath.Text = info.FullName;
-                StatusOwner.Text = context.GetOwner(info);
-                context.SetPathSelected(info);
+                try
+                {
+                    StatusLastWrite.Text = info.LastWriteTime.ToString("dd.MM.yy HH:mm");
+                    StatusPath.Text = info.FullName;
+                    StatusOwner.Text = context.GetOwner(info);
+                    context.SetPathSelected(info);
+                }
+                catch { } // Network disconnected
 
                 RulesControl.UpdateLayout();
                 UsersControl.UpdateLayout();

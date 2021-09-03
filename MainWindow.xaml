@@ -155,6 +155,9 @@
                         <DataTrigger Binding="{Binding IsDanger}" Value="true">
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding IsTransit}" Value="true">
+                            <Setter Property="FontStyle" Value="Italic" />
+                        </DataTrigger>
                     </Style.Triggers>
                     <Setter Property="IsSelected" Value="{Binding IsSelected}" />
                 </Style>

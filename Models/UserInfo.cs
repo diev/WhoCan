@@ -33,6 +33,7 @@ namespace WhoCan.Models
 
         public bool Enabled { get; set; }
         public bool IsDanger { get; set; }
+        public bool IsTransit { get; set; }
         public bool IsSelected { get; set; }
 
         public override bool Equals(object obj)
