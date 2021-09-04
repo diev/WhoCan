@@ -24,7 +24,7 @@ using System.Windows;
 // набор атрибутов. Измените значения этих атрибутов, чтобы изменить сведения,
 // связанные со сборкой.
 [assembly: AssemblyTitle("WhoCan")]
-[assembly: AssemblyDescription("Display ACL rights end export to Excel.")]
+[assembly: AssemblyDescription("Display ACL rights and export lists to Excel.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("diev")]
 [assembly: AssemblyProduct("WhoCan")]
@@ -67,6 +67,6 @@ using System.Windows;
 // Можно задать все значения или принять номера сборки и редакции по умолчанию 
 // используя "*", как показано ниже:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.8.0.0")]
-[assembly: AssemblyFileVersion("1.8.0.0")]
+[assembly: AssemblyVersion("1.8.1.0")]
+[assembly: AssemblyFileVersion("1.8.1.0")]
 [assembly: NeutralResourcesLanguage("ru-RU")]

@@ -44,6 +44,7 @@ namespace WhoCan
             InitializeFileSystemObjects();
             DataContext = new MainViewModel();
 
+            //Title = $"{App.Title} v{App.Version}";
             Title = $"{App.Title} v{App.Version.ToString(3)}";
         }
 
