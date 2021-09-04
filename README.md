@@ -3,8 +3,8 @@
 [![Build status]][appveyor]
 [![GitHub Release]][releases]
 
-Кто может изменить или видеть файлы?
-Программа проверки сетевых прав и экспорта списков в Excel.
+Кто может изменить или видеть файлы?  
+Программа проверки сетевых прав и экспорта списков доступа в Excel.
 
 ![Рабочее окно приложения]
 
@@ -15,6 +15,10 @@
 Artist: [Oxygen Team]  
 License: [GNU Lesser General Public License]  
 Commercial usage: Allowed
+
+## Системные требования
+
+ * .NET Framework 4.8
 
 ## License
 
