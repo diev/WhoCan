@@ -8,7 +8,7 @@
         xmlns:controls="clr-namespace:WhoCan"
         d:DataContext="{d:DesignInstance {x:Type local:MainViewModel}}"
         mc:Ignorable="d"
-        Title="WhoCan" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
+        Title="WhoCan" Height="600" Width="1000" Closing="Window_Closing">
 
     <Window.DataContext>
         <local:MainViewModel/>

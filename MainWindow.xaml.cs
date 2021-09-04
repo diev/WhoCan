@@ -36,11 +36,43 @@ namespace WhoCan
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string _preSelectPath = ""; //@"C:\Program Files\7-Zip\Lang"; // @"G:\"; //TODO
+        private string _preSelectPath;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Upgrade?
+            if (Properties.Settings.Default.WindowRect.Width == 0)
+            {
+                Properties.Settings.Default.Upgrade();
+            }
+
+            // First start?
+            if (Properties.Settings.Default.WindowRect.Width == 0)
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+            else
+            {
+                WindowState = Properties.Settings.Default.WindowState;
+
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+
+                Width = Math.Min(Properties.Settings.Default.WindowRect.Width, SystemParameters.VirtualScreenWidth);
+                Height = Math.Min(Properties.Settings.Default.WindowRect.Height, SystemParameters.VirtualScreenHeight);
+
+                Left = Math.Min(Math.Max(Properties.Settings.Default.WindowRect.Left, SystemParameters.VirtualScreenLeft),
+                    SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - Width);
+                Top = Math.Min(Math.Max(Properties.Settings.Default.WindowRect.Top, SystemParameters.VirtualScreenTop),
+                    SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - Height);
+            }
+
+            _preSelectPath = Properties.Settings.Default.PreselectPath;
+
             InitializeFileSystemObjects();
             DataContext = new MainViewModel();
 
@@ -54,7 +86,7 @@ namespace WhoCan
 
             var context = (MainViewModel)DataContext;
 
-            _preSelectPath = context.SelectedFileSystemInfo.FullName;
+            //_preSelectPath = context.SelectedFileSystemInfo.FullName;
             FoldersControl.Items.Clear();
             InitializeFileSystemObjects();
 
@@ -118,6 +150,9 @@ namespace WhoCan
                 // binding manually
                 var info = item.FileSystemInfo;
                 //context.SelectedFileSystemInfo = info;
+
+                _preSelectPath = info.FullName; //TODO Save
+                
                 try
                 {
                     StatusLastWrite.Text = info.LastWriteTime.ToString("dd.MM.yy HH:mm");
@@ -338,5 +373,13 @@ namespace WhoCan
         }
 
         #endregion Menu
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Properties.Settings.Default.WindowState = WindowState;
+            Properties.Settings.Default.WindowRect = RestoreBounds;
+            Properties.Settings.Default.PreselectPath = _preSelectPath;
+            Properties.Settings.Default.Save();
+        }
     }
 }

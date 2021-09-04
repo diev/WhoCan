@@ -31,30 +31,6 @@ namespace WhoCan
 {
     public class MainViewModel : BaseObject
     {
-        private readonly List<string> _skipUsers = new List<string> {
-            "admin",
-            "Administrator",
-            "Администратор"
-        };
-
-        private readonly List<string> _skipGroups = new List<string> {
-            "admins",
-            "Administrators",
-            "Администраторы",
-            "Администраторы домена",
-            "Администраторы предприятия",
-            "Все",
-            "Высокий обязательный уровень",
-            "Данная организация",
-            "Подтвержденное службой удостоверение",
-            "Пользователи",
-            "Пользователи домена",
-            "Пользователи журналов производительности",
-            "Пользователи удаленного рабочего стола",
-            "Прошедшие проверку",
-            "Средний обязательный уровень"
-        };
-
         private const string _rightDeny = "x";
         private const string _rightFull = "F";
         private const string _rightRead = "R";
@@ -124,19 +100,9 @@ namespace WhoCan
 
                     string name = isGroup ? principal.Name : principal.SamAccountName;
 
-                    if (isGroup)
+                    if (Helpers.IsSystemName(isGroup, name))
                     {
-                        if (_skipGroups.Contains(name))
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        if (_skipUsers.Contains(name))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     bool deny = rule.AccessControlType.HasFlag(AccessControlType.Deny);
@@ -305,13 +271,17 @@ namespace WhoCan
             {
                 var members = ((GroupPrincipal)item.Principal).GetMembers(true);
 
-                foreach (Principal member in members)
+                try
                 {
-                    if (member is UserPrincipal user)
+                    foreach (Principal member in members)
                     {
-                        AddRuleUser(item, user);
+                        if (member is UserPrincipal user)
+                        {
+                            AddRuleUser(item, user);
+                        }
                     }
                 }
+                catch { } // No network
             }
             else
             {
@@ -323,13 +293,17 @@ namespace WhoCan
         {
             var members = item.GroupPrincipal.GetMembers(true);
 
-            foreach (Principal member in members)
+            try
             {
-                if (member is UserPrincipal user)
+                foreach (Principal member in members)
                 {
-                    AddGroupUser(item, user);
+                    if (member is UserPrincipal user)
+                    {
+                        AddGroupUser(item, user);
+                    }
                 }
             }
+            catch { } // No network
         }
 
         private void AddRuleUser(RuleInfo item, UserPrincipal user)
@@ -426,30 +400,34 @@ namespace WhoCan
 
             var members = ((GroupPrincipal)item.Principal).GetMembers(); //TODO recursive doesn't work - help required!
 
-            foreach (Principal member in members)
+            try
             {
-                if (member is GroupPrincipal group)
+                foreach (Principal member in members)
                 {
-                    if (_skipGroups.Contains(group.Name))
+                    if (member is GroupPrincipal group)
                     {
-                        continue;
-                    }
+                        if (Helpers.IsSystemName(true, group.Name))
+                        {
+                            continue;
+                        }
 
-                    var groupInfo = new GroupInfo
-                    {
-                        Description = group.Description ?? group.DisplayName ?? group.SamAccountName,
-                        GroupName = group.Name,
-                        GroupPrincipal = group,
-                        //IsDanger = item.IsDanger,
-                        IsSelected = false
-                    };
+                        var groupInfo = new GroupInfo
+                        {
+                            Description = group.Description ?? group.DisplayName ?? group.SamAccountName,
+                            GroupName = group.Name,
+                            GroupPrincipal = group,
+                            //IsDanger = item.IsDanger,
+                            IsSelected = false
+                        };
 
-                    if (!GroupInfos.Contains(groupInfo))
-                    {
-                        GroupInfos.Add(groupInfo);
+                        if (!GroupInfos.Contains(groupInfo))
+                        {
+                            GroupInfos.Add(groupInfo);
+                        }
                     }
                 }
             }
+            catch { } // No network
         }
 
         private void AddUserGroups(UserInfo item)
@@ -464,7 +442,7 @@ namespace WhoCan
                     // make sure to add only group principals
                     if (member is GroupPrincipal group)
                     {
-                        if (_skipGroups.Contains(group.Name))
+                        if (Helpers.IsSystemName(true, group.Name))
                         {
                             continue;
                         }

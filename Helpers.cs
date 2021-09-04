@@ -16,6 +16,7 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
 using System.DirectoryServices.AccountManagement;
 using System.Security.AccessControl;
 using System.Text;
@@ -27,11 +28,39 @@ namespace WhoCan
         private static readonly PrincipalContext _domainContext;
         private static readonly PrincipalContext _machineContext;
 
+        private static readonly List<string> _skipUsers = new List<string> {
+            "admin",
+            "Administrator",
+            "Администратор"
+        };
+
+        private static readonly List<string> _skipGroups = new List<string> {
+            "admins",
+            "Администраторы домена",
+            "Администраторы предприятия",
+            "Все",
+            "Высокий обязательный уровень",
+            "Данная организация",
+            "Подтвержденное службой удостоверение",
+            "Пользователи домена",
+            "Пользователи журналов производительности",
+            "Пользователи удаленного рабочего стола",
+            "Прошедшие проверку",
+            "Средний обязательный уровень"
+        };
+
         static Helpers()
         {
             try
             {
                 _domainContext = new PrincipalContext(ContextType.Domain);
+                _skipGroups.AddRange(new List<string>
+                {
+                    "Administrators",
+                    "Администраторы",
+                    "Users",
+                    "Пользователи"
+                });
             }
             catch { }
 
@@ -51,6 +80,26 @@ namespace WhoCan
             }
             
             return Principal.FindByIdentity(_machineContext, identityValue);
+        }
+
+        public static bool IsSystemName(bool isGroup, string name)
+        {
+            if (isGroup)
+            {
+                if (_skipGroups.Contains(name))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (_skipUsers.Contains(name))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static string DistinguishedName(string distinguishedName)
