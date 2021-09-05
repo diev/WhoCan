@@ -54,7 +54,7 @@ namespace WhoCan
             try
             {
                 _domainContext = new PrincipalContext(ContextType.Domain);
-                _skipGroups.AddRange(new List<string>
+                _skipGroups.AddRange(new List<string> //TODO not skip for local drives
                 {
                     "Administrators",
                     "Администраторы",

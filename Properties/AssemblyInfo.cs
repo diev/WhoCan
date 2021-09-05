@@ -1,5 +1,4 @@
-﻿using System.Resources;
-#region License
+﻿#region License
 //------------------------------------------------------------------------------
 // Copyright (c) Dmitrii Evdokimov
 // Source https://github.com/diev/
@@ -16,6 +15,7 @@
 //------------------------------------------------------------------------------
 #endregion License
 
+using System.Resources;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
